@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "trimps-headless": "node packages/trimps-engine/src/cli.js"
+  }
+}
