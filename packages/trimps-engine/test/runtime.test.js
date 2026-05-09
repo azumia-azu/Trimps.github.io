@@ -53,6 +53,84 @@ test('creates a default headless runtime snapshot', () => {
   assert.equal(Object.isFrozen(snapshot.resources.trimps), true);
 });
 
+test('snapshot includes interaction state without exposing mutable game state', () => {
+  const runtime = createRuntime();
+  runtime.context.game.global.playerGathering = 'wood';
+  runtime.context.game.global.buyAmt = 10;
+  runtime.context.game.global.autoBattle = true;
+  runtime.context.game.global.mapsUnlocked = true;
+  runtime.context.game.global.preMapsActive = true;
+  runtime.context.game.global.buildingsQueue = ['Trap.2'];
+  runtime.context.game.resources.food.owned = 100;
+  runtime.context.game.resources.wood.owned = 100;
+  runtime.context.game.buildings.Trap.locked = 0;
+
+  const snapshot = runtime.snapshot();
+  const trap = snapshot.buildings.find((building) => building.name === 'Trap');
+  const battle = snapshot.upgrades.find((upgrade) => upgrade.name === 'Battle');
+
+  assert.equal(snapshot.playerGathering, 'wood');
+  assert.equal(snapshot.buyAmt, 10);
+  assert.equal(snapshot.autoFight, true);
+  assert.equal(snapshot.mapsUnlocked, true);
+  assert.equal(snapshot.preMapsActive, true);
+  assert.deepEqual(snapshot.buildQueue, [{ item: 'Trap', remaining: 2, raw: 'Trap.2' }]);
+  assert.equal(Object.isFrozen(snapshot.buildQueue[0]), true);
+  assert.equal(trap.canAfford, true);
+  assert.equal(battle.locked, true);
+  assert.equal(battle.done, false);
+  assert.equal(battle.unlocked, false);
+});
+
+test('snapshot includes owned maps and current combat cell summaries', () => {
+  const runtime = createRuntime();
+  runtime.context.game.global.mapsOwnedArray.push({
+    id: 'map1',
+    name: 'Test Map',
+    location: 'Forest',
+    level: 7,
+    size: 25,
+    difficulty: 1.1,
+    loot: 1.5,
+    clears: 2,
+    noRecycle: true,
+  });
+  runtime.context.game.global.gridArray[0] = {
+    name: 'Snimp',
+    level: 1,
+    health: 10,
+    maxHealth: 20,
+    attack: 3,
+    mutation: 'Healthy',
+  };
+
+  const snapshot = runtime.snapshot();
+
+  assert.deepEqual(snapshot.ownedMaps, [{
+    id: 'map1',
+    name: 'Test Map',
+    location: 'Forest',
+    level: 7,
+    size: 25,
+    difficulty: 1.1,
+    loot: 1.5,
+    clears: 2,
+    noRecycle: true,
+    selected: false,
+    running: false,
+  }]);
+  assert.deepEqual(snapshot.currentCell, {
+    index: 0,
+    name: 'Snimp',
+    level: 1,
+    health: 10,
+    maxHealth: 20,
+    attack: 3,
+    mutation: 'Healthy',
+  });
+  assert.equal(snapshot.currentEnemy.name, 'Snimp');
+});
+
 test('matches default snapshot golden shape', () => {
   const runtime = createRuntime();
   const actual = getGoldenSnapshotShape(runtime.snapshot());

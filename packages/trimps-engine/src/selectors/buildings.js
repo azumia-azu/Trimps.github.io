@@ -1,0 +1,77 @@
+const { canAffordCost, canAffordJob } = require('./affordability');
+const { addNumberField, addStringField, getItemEntries, getOwnDataValue, toNumber } = require('./helpers');
+
+function getBuildingSnapshot(game, name, building) {
+  const snapshot = {
+    name,
+    locked: Boolean(toNumber(getOwnDataValue(building, 'locked'), 0)),
+    owned: toNumber(getOwnDataValue(building, 'owned'), 0),
+    purchased: toNumber(getOwnDataValue(building, 'purchased'), 0),
+  };
+
+  addNumberField(snapshot, building, 'craftTime');
+  snapshot.canAfford = canAffordCost(game, building, { buyAmt: game.global && game.global.buyAmt, countKey: 'purchased' });
+  return snapshot;
+}
+
+function getJobSnapshot(game, name, job) {
+  const snapshot = {
+    name,
+    locked: Boolean(toNumber(getOwnDataValue(job, 'locked'), 0)),
+    owned: toNumber(getOwnDataValue(job, 'owned'), 0),
+    modifier: toNumber(getOwnDataValue(job, 'modifier'), 0),
+  };
+
+  addNumberField(snapshot, job, 'max');
+  addStringField(snapshot, job, 'increase');
+  snapshot.canAfford = canAffordJob(game, job, game.global && game.global.buyAmt);
+  return snapshot;
+}
+
+function getEquipmentSnapshot(game, name, equipment) {
+  const snapshot = {
+    name,
+    locked: Boolean(toNumber(getOwnDataValue(equipment, 'locked'), 0)),
+    level: toNumber(getOwnDataValue(equipment, 'level'), 0),
+    modifier: toNumber(getOwnDataValue(equipment, 'modifier'), 0),
+  };
+
+  addNumberField(snapshot, equipment, 'prestige');
+  addNumberField(snapshot, equipment, 'attack');
+  addNumberField(snapshot, equipment, 'attackCalculated');
+  addNumberField(snapshot, equipment, 'health');
+  addNumberField(snapshot, equipment, 'healthCalculated');
+  addNumberField(snapshot, equipment, 'block');
+  addNumberField(snapshot, equipment, 'blockCalculated');
+  snapshot.canAfford = canAffordCost(game, equipment, { buyAmt: game.global && game.global.buyAmt, countKey: 'level' });
+  return snapshot;
+}
+
+function getBuildQueueSnapshot(buildingsQueue) {
+  if (!Array.isArray(buildingsQueue)) return [];
+  return Array.from(buildingsQueue).map((raw) => {
+    const [item, remaining] = String(raw).split('.');
+    return {
+      item,
+      remaining: toNumber(remaining, 0),
+      raw: String(raw),
+    };
+  });
+}
+
+function getPurchasableSnapshots(game) {
+  return {
+    buildings: getItemEntries(game.buildings, (name, building) => getBuildingSnapshot(game, name, building)),
+    jobs: getItemEntries(game.jobs, (name, job) => getJobSnapshot(game, name, job)),
+    equipment: getItemEntries(game.equipment, (name, equipment) => getEquipmentSnapshot(game, name, equipment)),
+    buildQueue: getBuildQueueSnapshot(game.global && game.global.buildingsQueue),
+  };
+}
+
+module.exports = {
+  getBuildQueueSnapshot,
+  getBuildingSnapshot,
+  getEquipmentSnapshot,
+  getJobSnapshot,
+  getPurchasableSnapshots,
+};
