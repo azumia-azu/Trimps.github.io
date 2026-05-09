@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
 const path = require('path');
 const { createTrimpsRuntime } = require('./headless-runtime');
+const { createFileStoragePort } = require('./ports/storage-port');
 
 function usage() {
   return [
@@ -65,8 +65,9 @@ function main(argv) {
   }
 
   const runtime = createTrimpsRuntime({ rootDir: path.resolve(__dirname, '../../..') });
+  const fileStorage = createFileStoragePort({ baseDir: process.cwd() });
   if (options.savePath) {
-    const saveString = fs.readFileSync(path.resolve(options.savePath), 'utf8');
+    const saveString = fileStorage.readText(options.savePath);
     runtime.loadExport(saveString);
   }
   runtime.tick(options.seconds * 1000);
@@ -74,7 +75,7 @@ function main(argv) {
   console.log(formatSnapshot(snapshot));
 
   if (options.exportPath) {
-    fs.writeFileSync(path.resolve(options.exportPath), runtime.exportSave(), 'utf8');
+    fileStorage.writeText(options.exportPath, runtime.exportSave());
   }
   return 0;
 }

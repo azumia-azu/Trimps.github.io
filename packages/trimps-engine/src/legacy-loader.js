@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const { createBrowserContext } = require('./platform');
+const { createHeadlessPlatformPort } = require('./ports/platform-port');
 
 const LEGACY_SCRIPT_ORDER = [
   'Playfab/PlayFabSDK/PlayFabClientApi.js',
@@ -25,14 +25,15 @@ function loadLegacyScripts(context, rootDir) {
 
 function createLegacyRuntimeContext(options = {}) {
   const rootDir = options.rootDir || path.resolve(__dirname, '../../..');
-  const context = createBrowserContext(rootDir);
+  const platformPort = options.platformPort || createHeadlessPlatformPort(options);
+  const context = platformPort.createContext(rootDir);
   loadLegacyScripts(context, rootDir);
 
   if (!context.game || !context.game.global) {
     throw new Error('Legacy Trimps runtime did not create a game object.');
   }
 
-  return { context, rootDir };
+  return { context, platformPort, rootDir };
 }
 
 module.exports = {

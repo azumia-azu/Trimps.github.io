@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
 const path = require('path');
 
 function loadEngine() {
@@ -51,11 +50,12 @@ function delay(ms) {
 async function runDashboard(options) {
   validateOptions(options);
 
-  const { createTrimpsRuntime } = loadEngine();
+  const { createFileStoragePort, createTrimpsRuntime } = loadEngine();
   const { createOpenTuiRenderer } = require('./opentui-renderer');
   const runtime = createTrimpsRuntime({ rootDir: path.resolve(__dirname, '../../..') });
+  const fileStorage = createFileStoragePort({ baseDir: process.cwd() });
   if (options.savePath) {
-    const saveString = fs.readFileSync(path.resolve(options.savePath), 'utf8');
+    const saveString = fileStorage.readText(options.savePath);
     runtime.loadExport(saveString);
   }
 

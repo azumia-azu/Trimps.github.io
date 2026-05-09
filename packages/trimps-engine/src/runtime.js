@@ -18,7 +18,8 @@ function runLegacyTick(context, now) {
 }
 
 function createTrimpsRuntime(options = {}) {
-  const { context, rootDir } = createLegacyRuntimeContext(options);
+  const { context, platformPort, rootDir } = createLegacyRuntimeContext(options);
+  const clockPort = options.clockPort || (platformPort && platformPort.clockPort);
   let pendingTickMs = 0;
 
   const runtime = {
@@ -45,7 +46,7 @@ function createTrimpsRuntime(options = {}) {
       if (ticks <= 0) return 0;
 
       pendingTickMs -= ticks * tickMs;
-      const now = Date.now();
+      const now = clockPort && typeof clockPort.now === 'function' ? clockPort.now() : Date.now();
       for (let index = 0; index < ticks; index += 1) {
         context.game.global.time += tickMs;
         runLegacyTick(context, now + index * tickMs);

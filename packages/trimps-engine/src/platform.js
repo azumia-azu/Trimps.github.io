@@ -1,4 +1,6 @@
 const vm = require('vm');
+const { createSystemClockPort } = require('./ports/clock-port');
+const { createMemoryStoragePort } = require('./ports/storage-port');
 
 function createLocalStorage() {
   const store = new Map();
@@ -220,10 +222,10 @@ function createDocumentMock() {
   return document;
 }
 
-function createBrowserContext(rootDir) {
+function createBrowserContext(rootDir, options = {}) {
   const document = createDocumentMock();
-  const localStorage = createLocalStorage();
-  const startedAt = Date.now();
+  const clockPort = options.clockPort || createSystemClockPort();
+  const localStorage = options.storagePort || createMemoryStoragePort();
   const context = {
     console: {
       error: console.error.bind(console),
@@ -234,7 +236,7 @@ function createBrowserContext(rootDir) {
     localStorage,
     location: { href: 'http://localhost/', origin: 'http://localhost', search: '', hash: '' },
     navigator: { userAgent: 'trimps-headless-node' },
-    performance: { now: () => Date.now() - startedAt },
+    performance: { now: () => clockPort.performanceNow() },
     screen: { height: 768, width: 1024 },
     innerHeight: 768,
     innerWidth: 1024,

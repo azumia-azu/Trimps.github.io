@@ -11,6 +11,9 @@
     ".": "./src/headless-runtime.js",
     "./headless-runtime": "./src/headless-runtime.js",
     "./actions": "./src/actions.js",
+    "./ports/clock-port": "./src/ports/clock-port.js",
+    "./ports/platform-port": "./src/ports/platform-port.js",
+    "./ports/storage-port": "./src/ports/storage-port.js",
     "./snapshot": "./src/snapshot.js"
   },
   "scripts": {
