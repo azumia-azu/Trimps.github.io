@@ -2,10 +2,23 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const test = require('node:test');
 
+const { ACTION_METADATA, SUPPORTED_ACTION_TYPES } = require('../src/actions');
 const { getActionCapabilities } = require('../src/capabilities');
 const { createTrimpsRuntime } = require('../src/headless-runtime');
 
 const rootDir = path.resolve(__dirname, '../../..');
+
+function sortedValues(values) {
+  return Array.from(values).sort();
+}
+
+test('capabilities stay aligned with supported action metadata', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  const capabilities = runtime.capabilities();
+
+  assert.deepEqual(Object.keys(capabilities).sort(), sortedValues(SUPPORTED_ACTION_TYPES));
+  assert.deepEqual(Object.keys(ACTION_METADATA).sort(), sortedValues(SUPPORTED_ACTION_TYPES));
+});
 
 test('derives gather and purchase capabilities from a snapshot', () => {
   const runtime = createTrimpsRuntime({ rootDir });

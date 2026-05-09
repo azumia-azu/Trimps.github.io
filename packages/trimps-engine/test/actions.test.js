@@ -8,6 +8,7 @@ const {
   STABLE_ACTION_TYPES,
   SUPPORTED_ACTION_TYPES,
   getActionType,
+  normalizeBuyAmount,
   normalizeMapId,
   normalizePositiveInteger,
 } = require('../src/actions');
@@ -69,6 +70,15 @@ test('normalizes positive integer action amounts', () => {
   assert.throws(() => normalizePositiveInteger(1.5), /positive integer/);
 });
 
+test('normalizes buy amounts for adapter controls', () => {
+  assert.equal(normalizeBuyAmount(1), 1);
+  assert.equal(normalizeBuyAmount('25'), 25);
+  assert.equal(normalizeBuyAmount('Max'), 'Max');
+
+  assert.throws(() => normalizeBuyAmount(0), /positive integer or "Max"/);
+  assert.throws(() => normalizeBuyAmount('bad'), /positive integer or "Max"/);
+});
+
 test('normalizes map ids', () => {
   assert.equal(normalizeMapId('abc'), 'abc');
 
@@ -113,6 +123,37 @@ test('dispatches early state actions for TUI controls', () => {
   assert.equal(runtime.dispatch({ type: 'pauseFight' }), true);
 });
 
+test('setBuyAmount only mutates legacy buyAmt', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  assert.equal(runtime.dispatch({ type: 'setBuyAmount', amount: '25' }), 25);
+  assert.equal(runtime.context.game.global.buyAmt, 25);
+  assert.equal(runtime.snapshot().buyAmt, 25);
+});
+
+test('toggleAutoFight maps adapter autoFight to legacy autoBattle', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  assert.equal(runtime.context.game.global.autoFight, undefined);
+  assert.equal(runtime.dispatch({ type: 'toggleAutoFight', enabled: true }), true);
+  assert.equal(runtime.context.game.global.autoBattle, true);
+  assert.equal(runtime.context.game.global.autoFight, undefined);
+  assert.equal(runtime.snapshot().autoFight, true);
+});
+
+test('pauseFight maps false to AutoFight On and true to AutoFight Off', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  const button = runtime.context.document.getElementById('pauseFight');
+
+  assert.equal(runtime.dispatch({ type: 'pauseFight', paused: false }), false);
+  assert.equal(runtime.context.game.global.pauseFight, false);
+  assert.equal(button.innerHTML, 'AutoFight On');
+
+  assert.equal(runtime.dispatch({ type: 'pauseFight', paused: true }), true);
+  assert.equal(runtime.context.game.global.pauseFight, true);
+  assert.equal(button.innerHTML, 'AutoFight Off');
+});
+
 test('dispatches buyUpgrade through legacy upgrade flow', () => {
   const runtime = createTrimpsRuntime({ rootDir });
   const battle = runtime.context.game.upgrades.Battle;
@@ -126,6 +167,27 @@ test('dispatches buyUpgrade through legacy upgrade flow', () => {
   assert.equal(result, true);
   assert.equal(snapshotBattle.done, true);
   assert.equal(snapshotBattle.locked, true);
+});
+
+test('buyUpgrade reports false without mutating when resources are insufficient', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  const battle = runtime.context.game.upgrades.Battle;
+  battle.locked = 0;
+  battle.allowed = 1;
+  runtime.context.game.resources.science.owned = 0;
+
+  assert.equal(runtime.dispatch({ type: 'buyUpgrade', name: 'Battle' }), false);
+  assert.equal(battle.done, 0);
+  assert.equal(battle.locked, 0);
+});
+
+test('buyUpgrade validates unknown upgrade names', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  assert.throws(
+    () => runtime.dispatch({ type: 'buyUpgrade', name: 'NotARealUpgrade' }),
+    /Unknown upgrades target/,
+  );
 });
 
 test('validates early action payloads', () => {

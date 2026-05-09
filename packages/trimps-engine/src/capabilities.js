@@ -45,6 +45,8 @@ function getRunMapCapability(snapshot) {
 function getActionCapabilities(snapshot) {
   const safeSnapshot = snapshot || {};
   return {
+    load: { available: true, reason: null },
+    save: { available: true, reason: null },
     gather: Object.assign({}, GATHER_CAPABILITIES),
     buyBuilding: keyedCapabilities(safeSnapshot.buildings),
     buyJob: keyedCapabilities(safeSnapshot.jobs),

@@ -43,14 +43,10 @@ function validateOptions(options) {
   if (!Number.isSafeInteger(options.frames) || options.frames < 0) throw new Error('--frames must be a non-negative integer.');
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function runDashboard(options) {
   validateOptions(options);
 
-  const { createFileStoragePort, createTrimpsRuntime } = loadEngine();
+  const { createFileStoragePort, createSystemClockPort, createTrimpsRuntime, runRuntimeLoop } = loadEngine();
   const { createOpenTuiRenderer } = require('./opentui-renderer');
   const runtime = createTrimpsRuntime({ rootDir: path.resolve(__dirname, '../../..') });
   const fileStorage = createFileStoragePort({ baseDir: process.cwd() });
@@ -63,21 +59,16 @@ async function runDashboard(options) {
   const deltaMs = options.seconds * 1000;
 
   try {
-    if (options.frames === 0) {
-      runtime.tick(deltaMs);
-      await renderer.update(runtime.snapshot());
-      while (true) {
-        if (options.intervalMs > 0) await delay(options.intervalMs);
-        runtime.tick(options.intervalMs);
-        await renderer.update(runtime.snapshot());
-      }
-    }
-
-    for (let frame = 0; frame < options.frames; frame += 1) {
-      runtime.tick(frame === 0 ? deltaMs : options.intervalMs);
-      await renderer.update(runtime.snapshot());
-      if (options.intervalMs > 0) await delay(options.intervalMs);
-    }
+    await runRuntimeLoop({
+      runtime,
+      clockPort: createSystemClockPort(),
+      initialDeltaMs: deltaMs,
+      intervalMs: options.intervalMs,
+      frames: options.frames,
+      onSnapshot(snapshot) {
+        return renderer.update(snapshot);
+      },
+    });
   } finally {
     await renderer.close();
   }
