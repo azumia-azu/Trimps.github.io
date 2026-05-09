@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createTrimpsRuntime } = require('./runtime');
+const { createTrimpsRuntime } = require('./headless-runtime');
 
 function usage() {
   return [

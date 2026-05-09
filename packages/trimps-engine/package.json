@@ -9,7 +9,7 @@
   },
   "exports": {
     ".": "./src/headless-runtime.js",
-    "./runtime": "./src/runtime.js",
+    "./headless-runtime": "./src/headless-runtime.js",
     "./actions": "./src/actions.js",
     "./snapshot": "./src/snapshot.js"
   },

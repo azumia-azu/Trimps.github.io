@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const { cleanExportString, createTrimpsRuntime } = require('../src/runtime');
+const { cleanExportString, createTrimpsRuntime } = require('../src/headless-runtime');
 
 const rootDir = path.resolve(__dirname, '../../..');
 const defaultGoldenPath = path.join(__dirname, 'fixtures/default-snapshot.golden.json');
