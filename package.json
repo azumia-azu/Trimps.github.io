@@ -1,5 +1,13 @@
 {
   "scripts": {
-    "trimps-headless": "node packages/trimps-engine/src/cli.js"
+    "trimps-headless": "node packages/trimps-engine/src/cli.js",
+    "trimps-tui": "bun packages/trimps-tui/src/cli.js",
+    "trimps-tui:bun": "bun packages/trimps-tui/src/cli.js",
+    "start:tui": "bun packages/trimps-tui/src/cli.js run"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.2.6",
+    "@opentui/react": "^0.2.6",
+    "react": "^19.2.6"
   }
 }
