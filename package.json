@@ -1,13 +1,14 @@
 {
+  "name": "trimps-workspace",
+  "private": true,
+  "workspaces": [
+    "packages/trimps-engine",
+    "packages/trimps-tui"
+  ],
   "scripts": {
-    "trimps-headless": "node packages/trimps-engine/src/cli.js",
-    "trimps-tui": "bun packages/trimps-tui/src/cli.js",
-    "trimps-tui:bun": "bun packages/trimps-tui/src/cli.js",
-    "start:tui": "bun packages/trimps-tui/src/cli.js run"
-  },
-  "dependencies": {
-    "@opentui/core": "^0.2.6",
-    "@opentui/react": "^0.2.6",
-    "react": "^19.2.6"
+    "trimps-headless": "npm --workspace @trimps/engine run trimps-headless --",
+    "trimps-tui": "bun --cwd packages/trimps-tui src/cli.js",
+    "trimps-tui:bun": "bun --cwd packages/trimps-tui src/cli.js",
+    "start:tui": "bun --cwd packages/trimps-tui src/cli.js run"
   }
 }

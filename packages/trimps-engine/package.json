@@ -1,0 +1,23 @@
+{
+  "name": "@trimps/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/headless-runtime.js",
+  "bin": {
+    "trimps-headless": "./src/cli.js"
+  },
+  "exports": {
+    ".": "./src/headless-runtime.js",
+    "./runtime": "./src/runtime.js",
+    "./actions": "./src/actions.js",
+    "./snapshot": "./src/snapshot.js"
+  },
+  "scripts": {
+    "trimps-headless": "node src/cli.js",
+    "start": "node src/cli.js run"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

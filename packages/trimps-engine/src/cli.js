@@ -15,6 +15,7 @@ function usage() {
 function parseArgs(argv) {
   const [command, ...args] = argv;
   const options = { command, seconds: 0 };
+  if (command === '--help' || command === '-h') options.help = true;
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--save') options.savePath = args[++index];

@@ -2,8 +2,15 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createTrimpsRuntime } = require('../../trimps-engine/src/runtime');
-const { createOpenTuiRenderer } = require('./opentui-renderer');
+
+function loadEngine() {
+  try {
+    return require('@trimps/engine');
+  } catch (error) {
+    if (!error || error.code !== 'MODULE_NOT_FOUND') throw error;
+    return require('../../trimps-engine/src/headless-runtime');
+  }
+}
 
 function usage() {
   return [
@@ -18,6 +25,7 @@ function usage() {
 function parseArgs(argv) {
   const [command, ...args] = argv;
   const options = { command, seconds: 0, intervalMs: 1000, frames: 0 };
+  if (command === '--help' || command === '-h') options.help = true;
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--save') options.savePath = args[++index];
@@ -43,6 +51,8 @@ function delay(ms) {
 async function runDashboard(options) {
   validateOptions(options);
 
+  const { createTrimpsRuntime } = loadEngine();
+  const { createOpenTuiRenderer } = require('./opentui-renderer');
   const runtime = createTrimpsRuntime({ rootDir: path.resolve(__dirname, '../../..') });
   if (options.savePath) {
     const saveString = fs.readFileSync(path.resolve(options.savePath), 'utf8');
