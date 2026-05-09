@@ -12,6 +12,11 @@ function getOwnedResource(game, resourceName) {
 }
 
 function getCostAmount(cost, currentCount, amount) {
+  if (typeof cost === 'function') {
+    const dynamicCost = Number(cost());
+    return Number.isFinite(dynamicCost) ? dynamicCost : Infinity;
+  }
+
   if (Array.isArray(cost)) {
     const base = Number(cost[0]);
     const scale = Number(cost[1]);
@@ -25,6 +30,26 @@ function getCostAmount(cost, currentCount, amount) {
   return Number.isFinite(fixedCost) ? fixedCost * amount : Infinity;
 }
 
+function getPerkLevel(game, name) {
+  const perk = game.portal && game.portal[name];
+  if (!perk) return 0;
+  if (game.global && game.global.universe === 2) return toNumber(getOwnDataValue(perk, 'radLevel'), 0);
+  return toNumber(getOwnDataValue(perk, 'level'), 0);
+}
+
+function getPerkMultiplier(game, name) {
+  const perk = game.portal && game.portal[name];
+  const level = getPerkLevel(game, name);
+  const modifier = toNumber(getOwnDataValue(perk, 'modifier'), 0);
+  return level > 0 ? Math.pow(1 - modifier, level) : 1;
+}
+
+function getPriceMultiplier(game, itemType) {
+  if (itemType === 'building') return getPerkMultiplier(game, 'Resourceful');
+  if (itemType === 'equipment') return getPerkMultiplier(game, 'Artisanistry');
+  return 1;
+}
+
 function canAffordCost(game, item, options = {}) {
   if (!item || item.locked) return false;
   const costs = item.cost && (item.cost.resources || item.cost);
@@ -32,9 +57,10 @@ function canAffordCost(game, item, options = {}) {
   const amount = normalizePurchaseAmount(options.buyAmt);
   const countKey = options.countKey || 'purchased';
   const currentCount = toNumber(getOwnDataValue(item, countKey), 0);
+  const priceMultiplier = getPriceMultiplier(game, options.itemType);
 
   return Object.keys(costs).every((resourceName) => {
-    const price = getCostAmount(costs[resourceName], currentCount, amount);
+    const price = Math.ceil(getCostAmount(costs[resourceName], currentCount, amount) * priceMultiplier);
     return Number.isFinite(price) && getOwnedResource(game, resourceName) >= price;
   });
 }
@@ -55,5 +81,6 @@ module.exports = {
   canAffordCost,
   canAffordJob,
   getCostAmount,
+  getPerkLevel,
   normalizePurchaseAmount,
 };

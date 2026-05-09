@@ -82,6 +82,36 @@ test('snapshot includes interaction state without exposing mutable game state', 
   assert.equal(battle.unlocked, false);
 });
 
+test('snapshot affordability evaluates function-valued building costs', () => {
+  const runtime = createRuntime();
+  runtime.context.game.buildings.Barn.locked = 0;
+  runtime.context.game.resources.food.owned = 125;
+  runtime.context.game.resources.food.max = 500;
+
+  const snapshot = runtime.snapshot();
+  const barn = snapshot.buildings.find((building) => building.name === 'Barn');
+
+  assert.equal(barn.canAfford, true);
+});
+
+test('snapshot affordability applies legacy structure and equipment price modifiers', () => {
+  const runtime = createRuntime();
+  runtime.context.game.buildings.Hut.locked = 0;
+  runtime.context.game.equipment.Shield.locked = 0;
+  runtime.context.game.portal.Resourceful.level = 1;
+  runtime.context.game.portal.Artisanistry.level = 1;
+  runtime.context.game.resources.food.owned = 119;
+  runtime.context.game.resources.wood.owned = 72;
+  runtime.context.game.resources.wood.max = 500;
+
+  const snapshot = runtime.snapshot();
+  const hut = snapshot.buildings.find((building) => building.name === 'Hut');
+  const shield = snapshot.equipment.find((equipment) => equipment.name === 'Shield');
+
+  assert.equal(hut.canAfford, true);
+  assert.equal(shield.canAfford, true);
+});
+
 test('snapshot includes owned maps and current combat cell summaries', () => {
   const runtime = createRuntime();
   runtime.context.game.global.mapsOwnedArray.push({

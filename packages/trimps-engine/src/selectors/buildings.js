@@ -10,7 +10,11 @@ function getBuildingSnapshot(game, name, building) {
   };
 
   addNumberField(snapshot, building, 'craftTime');
-  snapshot.canAfford = canAffordCost(game, building, { buyAmt: game.global && game.global.buyAmt, countKey: 'purchased' });
+  snapshot.canAfford = canAffordCost(game, building, {
+    buyAmt: game.global && game.global.buyAmt,
+    countKey: 'purchased',
+    itemType: 'building',
+  });
   return snapshot;
 }
 
@@ -43,7 +47,11 @@ function getEquipmentSnapshot(game, name, equipment) {
   addNumberField(snapshot, equipment, 'healthCalculated');
   addNumberField(snapshot, equipment, 'block');
   addNumberField(snapshot, equipment, 'blockCalculated');
-  snapshot.canAfford = canAffordCost(game, equipment, { buyAmt: game.global && game.global.buyAmt, countKey: 'level' });
+  snapshot.canAfford = canAffordCost(game, equipment, {
+    buyAmt: game.global && game.global.buyAmt,
+    countKey: 'level',
+    itemType: 'equipment',
+  });
   return snapshot;
 }
 
