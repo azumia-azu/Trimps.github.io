@@ -1,5 +1,55 @@
 const GATHER_RESOURCES = new Set(['food', 'wood', 'metal', 'science', 'buildings', 'trimps']);
 
+const STABLE_ACTION_TYPES = new Set(['load', 'save', 'gather']);
+
+const EXPERIMENTAL_ACTION_TYPES = new Set([
+  'buyBuilding',
+  'buyJob',
+  'buyEquipment',
+  'fight',
+  'runMap',
+]);
+
+const SUPPORTED_ACTION_TYPES = new Set([
+  ...STABLE_ACTION_TYPES,
+  ...EXPERIMENTAL_ACTION_TYPES,
+]);
+
+const ACTION_METADATA = {
+  load: {
+    stability: 'stable',
+    description: 'Load a Trimps export save string through the legacy load() function.',
+  },
+  save: {
+    stability: 'stable',
+    description: 'Export current runtime state through the legacy save() function.',
+  },
+  gather: {
+    stability: 'stable',
+    description: 'Switch the current gathering resource through setGather().',
+  },
+  buyBuilding: {
+    stability: 'experimental',
+    description: 'Buy a legacy building by exact name.',
+  },
+  buyJob: {
+    stability: 'experimental',
+    description: 'Buy a legacy job by exact name.',
+  },
+  buyEquipment: {
+    stability: 'experimental',
+    description: 'Buy a legacy equipment item by exact name.',
+  },
+  fight: {
+    stability: 'experimental',
+    description: 'Enter or advance legacy fighting flow.',
+  },
+  runMap: {
+    stability: 'experimental',
+    description: 'Run an owned legacy map by exact id.',
+  },
+};
+
 const ACTION_TARGETS = {
   buyBuilding: { collection: 'buildings', legacyFunction: 'buyBuilding' },
   buyEquipment: { collection: 'equipment', legacyFunction: 'buyEquipment' },
@@ -214,14 +264,19 @@ function dispatchLegacyAction(context, runtime, action) {
 }
 
 module.exports = {
+  ACTION_METADATA,
   ACTION_TARGETS,
+  EXPERIMENTAL_ACTION_TYPES,
   GATHER_RESOURCES,
+  STABLE_ACTION_TYPES,
+  SUPPORTED_ACTION_TYPES,
   assertUnlocked,
   assertLegacyFunction,
   dispatchFightAction,
   dispatchLegacyAction,
   dispatchRunMapAction,
   ensureFightTargetExists,
+  getActionType,
   getLegacyGlobal,
   getValidatedPurchase,
   isPauseGameEnabled,
