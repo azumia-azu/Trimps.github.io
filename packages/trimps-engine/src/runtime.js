@@ -1,4 +1,5 @@
 const { dispatchLegacyAction } = require('./actions');
+const { getActionCapabilities } = require('./capabilities');
 const { createLegacyRuntimeContext } = require('./legacy-loader');
 const { createSnapshot } = require('./snapshot');
 
@@ -58,6 +59,9 @@ function createTrimpsRuntime(options = {}) {
     },
     snapshot() {
       return createSnapshot(context.game);
+    },
+    capabilities() {
+      return getActionCapabilities(runtime.snapshot());
     },
   };
 

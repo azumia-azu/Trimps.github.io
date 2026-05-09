@@ -25,8 +25,12 @@ test('action stability sets describe stable and experimental actions', () => {
     'buyBuilding',
     'buyEquipment',
     'buyJob',
+    'buyUpgrade',
     'fight',
+    'pauseFight',
     'runMap',
+    'setBuyAmount',
+    'toggleAutoFight',
   ]);
 
   assert.deepEqual(
@@ -91,4 +95,43 @@ test('runtime dispatch smoke covers stable action path', () => {
   const save = runtime.dispatch({ type: 'save' });
   assert.equal(typeof save, 'string');
   assert.ok(save.length > 0);
+});
+
+test('dispatches early state actions for TUI controls', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  assert.equal(runtime.dispatch({ type: 'setBuyAmount', amount: 10 }), 10);
+  assert.equal(runtime.snapshot().buyAmt, 10);
+  assert.equal(runtime.dispatch({ type: 'setBuyAmount', amount: 'Max' }), 'Max');
+
+  assert.equal(runtime.dispatch({ type: 'toggleAutoFight', enabled: true }), true);
+  assert.equal(runtime.snapshot().autoFight, true);
+  assert.equal(runtime.dispatch({ type: 'toggleAutoFight' }), false);
+
+  assert.equal(runtime.dispatch({ type: 'pauseFight', paused: false }), false);
+  assert.equal(runtime.snapshot().pauseFight, false);
+  assert.equal(runtime.dispatch({ type: 'pauseFight' }), true);
+});
+
+test('dispatches buyUpgrade through legacy upgrade flow', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  const battle = runtime.context.game.upgrades.Battle;
+  battle.locked = 0;
+  battle.allowed = 1;
+  runtime.context.game.resources.science.owned = 10;
+
+  const result = runtime.dispatch({ type: 'buyUpgrade', name: 'Battle' });
+  const snapshotBattle = runtime.snapshot().upgrades.find((upgrade) => upgrade.name === 'Battle');
+
+  assert.equal(result, true);
+  assert.equal(snapshotBattle.done, true);
+  assert.equal(snapshotBattle.locked, true);
+});
+
+test('validates early action payloads', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  assert.throws(() => runtime.dispatch({ type: 'setBuyAmount', amount: 0 }), /positive integer or "Max"/);
+  assert.throws(() => runtime.dispatch({ type: 'buyUpgrade', name: '' }), /exact upgrade name/);
+  assert.throws(() => runtime.dispatch({ type: 'buyUpgrade', name: 'Battle' }), /locked/);
 });

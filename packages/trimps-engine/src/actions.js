@@ -6,8 +6,12 @@ const EXPERIMENTAL_ACTION_TYPES = new Set([
   'buyBuilding',
   'buyJob',
   'buyEquipment',
+  'buyUpgrade',
   'fight',
+  'pauseFight',
   'runMap',
+  'setBuyAmount',
+  'toggleAutoFight',
 ]);
 
 const SUPPORTED_ACTION_TYPES = new Set([
@@ -40,13 +44,29 @@ const ACTION_METADATA = {
     stability: 'experimental',
     description: 'Buy a legacy equipment item by exact name.',
   },
+  buyUpgrade: {
+    stability: 'experimental',
+    description: 'Buy a legacy upgrade by exact name.',
+  },
   fight: {
     stability: 'experimental',
     description: 'Enter or advance legacy fighting flow.',
   },
+  pauseFight: {
+    stability: 'experimental',
+    description: 'Set or toggle the legacy pauseFight flag.',
+  },
   runMap: {
     stability: 'experimental',
     description: 'Run an owned legacy map by exact id.',
+  },
+  setBuyAmount: {
+    stability: 'experimental',
+    description: 'Set the legacy global buy amount to a positive integer or Max.',
+  },
+  toggleAutoFight: {
+    stability: 'experimental',
+    description: 'Set or toggle the legacy autoFight/autoBattle state.',
   },
 };
 
@@ -67,6 +87,15 @@ function normalizePositiveInteger(value, defaultValue = 1) {
   const normalized = Number(rawValue);
   if (!Number.isSafeInteger(normalized) || normalized <= 0) {
     throw new Error(`Action amount must be a positive integer; received ${String(value)}.`);
+  }
+  return normalized;
+}
+
+function normalizeBuyAmount(value) {
+  if (value === 'Max') return 'Max';
+  const normalized = Number(value);
+  if (!Number.isSafeInteger(normalized) || normalized <= 0) {
+    throw new Error(`setBuyAmount action requires a positive integer or "Max"; received ${String(value)}.`);
   }
   return normalized;
 }
@@ -225,6 +254,41 @@ function dispatchRunMapAction(context, action) {
   };
 }
 
+function dispatchSetBuyAmountAction(context, action) {
+  const global = getLegacyGlobal(context);
+  const amount = normalizeBuyAmount(action.amount);
+  global.buyAmt = amount;
+  return global.buyAmt;
+}
+
+function dispatchToggleAutoFightAction(context, action) {
+  const global = getLegacyGlobal(context);
+  const enabled = typeof action.enabled === 'undefined' ? !Boolean(global.autoBattle) : Boolean(action.enabled);
+  global.autoBattle = enabled;
+  return Boolean(global.autoBattle);
+}
+
+function dispatchPauseFightAction(context, action) {
+  const global = getLegacyGlobal(context);
+  const paused = typeof action.paused === 'undefined' ? !Boolean(global.pauseFight) : Boolean(action.paused);
+  global.pauseFight = paused;
+  if (typeof context.pauseFight === 'function') context.pauseFight(true);
+  return Boolean(global.pauseFight);
+}
+
+function dispatchBuyUpgradeAction(context, action) {
+  assertLegacyFunction(context, 'buyUpgrade');
+  if (typeof action.name !== 'string' || action.name.length === 0) {
+    throw new Error('buyUpgrade action requires an exact upgrade name.');
+  }
+  const upgrade = lookupExactTarget(context, 'upgrades', action.name);
+  if (upgrade && upgrade.locked) {
+    throw new Error(`upgrades target is locked and cannot be purchased: ${action.name}`);
+  }
+  const result = context.buyUpgrade(action.name, true, true, Boolean(action.heldCtrl));
+  return Boolean(result);
+}
+
 function dispatchLegacyAction(context, runtime, action) {
   switch (getActionType(action)) {
     case 'load': {
@@ -254,10 +318,18 @@ function dispatchLegacyAction(context, runtime, action) {
       const purchase = getValidatedPurchase(context, action, 'buyJob');
       return buyLegacyJob(context, purchase.targetName, purchase.amount);
     }
+    case 'buyUpgrade':
+      return dispatchBuyUpgradeAction(context, action);
     case 'fight':
       return dispatchFightAction(context);
+    case 'pauseFight':
+      return dispatchPauseFightAction(context, action);
     case 'runMap':
       return dispatchRunMapAction(context, action);
+    case 'setBuyAmount':
+      return dispatchSetBuyAmountAction(context, action);
+    case 'toggleAutoFight':
+      return dispatchToggleAutoFightAction(context, action);
     default:
       throw new Error(`Unsupported runtime action: ${String(action.type)}`);
   }
@@ -273,8 +345,12 @@ module.exports = {
   assertUnlocked,
   assertLegacyFunction,
   dispatchFightAction,
+  dispatchBuyUpgradeAction,
   dispatchLegacyAction,
+  dispatchPauseFightAction,
   dispatchRunMapAction,
+  dispatchSetBuyAmountAction,
+  dispatchToggleAutoFightAction,
   ensureFightTargetExists,
   getActionType,
   getLegacyGlobal,
@@ -283,5 +359,6 @@ module.exports = {
   lookupExactTarget,
   lookupOwnedMapById,
   normalizeMapId,
+  normalizeBuyAmount,
   normalizePositiveInteger,
 };
