@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const path = require('path');
+const { formatResource } = require('./formatter');
 const { createTrimpsRuntime } = require('./headless-runtime');
 const { createFileStoragePort } = require('./ports/storage-port');
 
@@ -25,18 +26,6 @@ function parseArgs(argv) {
     else throw new Error(`Unknown argument: ${arg}`);
   }
   return options;
-}
-
-function formatNumber(value) {
-  if (value === null || typeof value === 'undefined') return 'n/a';
-  if (!Number.isFinite(value)) return String(value);
-  if (Math.abs(value) >= 1000000 || (Math.abs(value) > 0 && Math.abs(value) < 0.01)) return value.toExponential(3);
-  return Number.isInteger(value) ? String(value) : value.toFixed(3);
-}
-
-function formatResource(label, resource) {
-  const max = resource.max === null ? '' : ` / ${formatNumber(resource.max)}`;
-  return `${label}: ${formatNumber(resource.owned)}${max}`;
 }
 
 function formatSnapshot(snapshot) {

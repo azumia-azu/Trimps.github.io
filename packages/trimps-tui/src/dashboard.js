@@ -1,6 +1,16 @@
 const React = require('react');
 
 const e = React.createElement;
+const { formatNumber, formatPercent, formatResource } = loadFormatter();
+
+function loadFormatter() {
+  try {
+    return require('@trimps/engine');
+  } catch (error) {
+    if (!error || error.code !== 'MODULE_NOT_FOUND') throw error;
+    return require('../../trimps-engine/src/formatter');
+  }
+}
 
 const THEME = Object.freeze({
   background: '#000000',
@@ -35,24 +45,6 @@ const CORE_RESOURCES = [
 const BUY_TABS = ['All', 'Buildings', 'Jobs', 'Upgrades', 'Equipment'];
 const NUM_TABS = ['+1', '+10', '+25', '+100', 'Custom', 'Max'];
 
-function formatNumber(value) {
-  if (value === null || typeof value === 'undefined') return 'n/a';
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return String(value);
-  const absolute = Math.abs(numericValue);
-  if (absolute >= 1000000000) return numericValue.toExponential(3);
-  if (absolute >= 1000000) return `${(numericValue / 1000000).toFixed(2)}M`;
-  if (absolute >= 1000) return `${(numericValue / 1000).toFixed(2)}K`;
-  if (absolute > 0 && absolute < 0.01) return numericValue.toExponential(3);
-  return Number.isInteger(numericValue) ? String(numericValue) : numericValue.toFixed(3);
-}
-
-function formatResource(label, resource) {
-  const safeResource = resource || { owned: 0, max: null };
-  const max = safeResource.max === null || typeof safeResource.max === 'undefined' ? '' : ` / ${formatNumber(safeResource.max)}`;
-  return `${label}: ${formatNumber(safeResource.owned)}${max}`;
-}
-
 function countUnlocked(items) {
   return safeItems(items).filter((item) => !item.locked).length;
 }
@@ -64,12 +56,6 @@ function countOwned(items, ownedKey) {
 function formatItemCounts(label, items, ownedKey) {
   const safe = safeItems(items);
   return `${label}: ${countOwned(safe, ownedKey)} owned / ${countUnlocked(safe)} unlocked / ${safe.length} total`;
-}
-
-function formatPercent(resource) {
-  if (!resource || !resource.max || resource.max <= 0) return '0%';
-  const percent = Math.max(0, Math.min(100, (Number(resource.owned) / Number(resource.max)) * 100));
-  return `${percent.toFixed(0)}%`;
 }
 
 function safeItems(items) {
