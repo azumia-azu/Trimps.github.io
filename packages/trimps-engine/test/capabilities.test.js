@@ -29,10 +29,12 @@ test('derives gather and purchase capabilities from a snapshot', () => {
   const capabilities = getActionCapabilities(runtime.snapshot());
 
   assert.deepEqual(capabilities.gather, {
+    buildings: true,
     food: true,
-    wood: true,
     metal: true,
     science: true,
+    trimps: true,
+    wood: true,
   });
   assert.deepEqual(capabilities.buyBuilding.Trap, { available: true, reason: null });
   assert.equal(capabilities.buyBuilding.Hut.available, false);

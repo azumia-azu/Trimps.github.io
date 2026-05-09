@@ -54,6 +54,27 @@ test('manual clock port drives runtime ticks without Date.now', () => {
   assert.equal(clockPort.now(), 1250);
 });
 
+test('manual clock port schedules timeout and interval callbacks on advance', () => {
+  const clockPort = createManualClockPort(1000);
+  const events = [];
+
+  clockPort.setTimeout((label) => events.push(label), 100, 'timeout');
+  const intervalId = clockPort.setInterval(() => events.push('interval'), 50);
+
+  clockPort.advance(49);
+  assert.deepEqual(events, []);
+
+  clockPort.advance(1);
+  assert.deepEqual(events, ['interval']);
+
+  clockPort.advance(50);
+  assert.deepEqual(events, ['interval', 'timeout', 'interval']);
+
+  clockPort.clearInterval(intervalId);
+  clockPort.advance(100);
+  assert.deepEqual(events, ['interval', 'timeout', 'interval']);
+});
+
 test('legacy loader accepts an injected platform port', () => {
   const storagePort = createMemoryStoragePort({ trimpsSave: 'stored-save' });
   const clockPort = createManualClockPort(5000);

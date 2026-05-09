@@ -1,8 +1,10 @@
 const GATHER_CAPABILITIES = Object.freeze({
+  buildings: true,
   food: true,
-  wood: true,
   metal: true,
   science: true,
+  trimps: true,
+  wood: true,
 });
 
 function itemCapability(item) {

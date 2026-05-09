@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+const { createManualClockPort } = require('../src/ports/clock-port');
 const { runRuntimeLoop } = require('../src/runner');
 
 function createRuntimeStub() {
@@ -15,6 +16,12 @@ function createRuntimeStub() {
       return { ticks: ticks.slice() };
     },
   };
+}
+
+async function flushPromises() {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 test('runtime runner advances finite frames through the engine loop', async () => {
@@ -44,6 +51,34 @@ test('runtime runner advances finite frames through the engine loop', async () =
   assert.deepEqual(runtime.ticks, [1000, 250, 250]);
   assert.deepEqual(delays, [250, 250]);
   assert.deepEqual(frames, [1000, 250, 250]);
+});
+
+test('runtime runner can be driven by manual clock timers', async () => {
+  const runtime = createRuntimeStub();
+  const clockPort = createManualClockPort();
+  const frames = [];
+  const loop = runRuntimeLoop({
+    runtime,
+    clockPort,
+    intervalMs: 250,
+    frames: 3,
+    onSnapshot(snapshot) {
+      frames.push(snapshot.ticks[snapshot.ticks.length - 1]);
+    },
+  });
+
+  await flushPromises();
+  assert.deepEqual(runtime.ticks, [0]);
+
+  clockPort.advance(250);
+  await flushPromises();
+  assert.deepEqual(runtime.ticks, [0, 250]);
+
+  clockPort.advance(250);
+  await loop;
+
+  assert.deepEqual(runtime.ticks, [0, 250, 250]);
+  assert.deepEqual(frames, [0, 250, 250]);
 });
 
 test('runtime runner validates loop options', async () => {
