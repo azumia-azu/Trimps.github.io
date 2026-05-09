@@ -1,0 +1,122 @@
+{
+  "world": 1,
+  "lastClearedCell": -1,
+  "lastClearedMapCell": -1,
+  "mode": "world",
+  "mapsActive": false,
+  "fighting": false,
+  "pauseFight": true,
+  "challenge": null,
+  "resources": {
+    "food": {
+      "owned": 0,
+      "max": 500
+    },
+    "wood": {
+      "owned": 0,
+      "max": 500
+    },
+    "metal": {
+      "owned": 0,
+      "max": 500
+    },
+    "science": {
+      "owned": 0,
+      "max": null
+    },
+    "trimps": {
+      "owned": 0,
+      "max": 10,
+      "working": 0,
+      "soldiers": 0,
+      "maxSoldiers": 1,
+      "potency": 0.0085,
+      "speed": 5
+    }
+  },
+  "buildingNames": [
+    "Trap",
+    "Barn",
+    "Shed",
+    "Forge",
+    "Hut",
+    "House",
+    "Mansion",
+    "Hotel",
+    "Resort",
+    "Gateway",
+    "Wormhole",
+    "Collector",
+    "Warpstation",
+    "Hub",
+    "Gym",
+    "Smithy",
+    "Tribute",
+    "Nursery",
+    "Microchip",
+    "Antenna",
+    "Laboratory"
+  ],
+  "jobNames": [
+    "Farmer",
+    "Lumberjack",
+    "Miner",
+    "Scientist",
+    "Trainer",
+    "Explorer",
+    "Dragimp",
+    "Geneticist",
+    "Magmamancer",
+    "Amalgamator",
+    "Meteorologist",
+    "Worshipper"
+  ],
+  "equipmentNames": [
+    "Shield",
+    "Dagger",
+    "Boots",
+    "Mace",
+    "Helmet",
+    "Polearm",
+    "Pants",
+    "Battleaxe",
+    "Shoulderguards",
+    "Greatsword",
+    "Breastplate",
+    "Arbalest",
+    "Gambeson"
+  ],
+  "messagePreferences": {
+    "Story": {
+      "enabled": true
+    },
+    "Loot": {
+      "enabled": true,
+      "primary": true,
+      "secondary": true,
+      "bone": true,
+      "exotic": true,
+      "helium": true,
+      "voidMaps": true,
+      "essence": true,
+      "token": true,
+      "magma": true,
+      "events": true,
+      "cache": true,
+      "exp": true
+    },
+    "Unlocks": {
+      "enabled": true,
+      "repeated": true,
+      "unique": true
+    },
+    "Combat": {
+      "enabled": true,
+      "trimp": true,
+      "enemy": true
+    },
+    "Notices": {
+      "enabled": true
+    }
+  }
+}

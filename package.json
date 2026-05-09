@@ -6,6 +6,7 @@
     "packages/trimps-tui"
   ],
   "scripts": {
+    "test": "npm --workspace @trimps/engine test",
     "trimps-headless": "npm --workspace @trimps/engine run trimps-headless --",
     "trimps-tui": "bun --cwd packages/trimps-tui src/cli.js",
     "trimps-tui:bun": "bun --cwd packages/trimps-tui src/cli.js",
