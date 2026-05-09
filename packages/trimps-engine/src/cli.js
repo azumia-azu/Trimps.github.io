@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createTrimpsRuntime } = require('./headless-runtime');
+const { createTrimpsRuntime } = require('./runtime');
 
 function usage() {
   return [
@@ -68,7 +68,7 @@ function main(argv) {
     const saveString = fs.readFileSync(path.resolve(options.savePath), 'utf8');
     runtime.loadExport(saveString);
   }
-  runtime.tick(options.seconds);
+  runtime.tick(options.seconds * 1000);
   const snapshot = runtime.snapshot();
   console.log(formatSnapshot(snapshot));
 
