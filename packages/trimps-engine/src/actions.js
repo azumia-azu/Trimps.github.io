@@ -68,6 +68,113 @@ function buyLegacyJob(context, targetName, amount) {
   }
 }
 
+function getLegacyGlobal(context) {
+  if (!context.game || !context.game.global) throw new Error('Legacy game.global is unavailable.');
+  return context.game.global;
+}
+
+function isPauseGameEnabled(context) {
+  return Boolean(context.game && context.game.options && context.game.options.menu && context.game.options.menu.pauseGame && context.game.options.menu.pauseGame.enabled);
+}
+
+function assertLegacyFunction(context, functionName) {
+  if (typeof context[functionName] !== 'function') throw new Error(`Legacy ${functionName}() is unavailable.`);
+}
+
+function dispatchFightAction(context) {
+  assertLegacyFunction(context, 'fightManual');
+  const global = getLegacyGlobal(context);
+  const battleUpgrade = context.game.upgrades && context.game.upgrades.Battle;
+  if (!battleUpgrade || !battleUpgrade.done) {
+    throw new Error('fight action requires the Battle upgrade to be unlocked.');
+  }
+  if (isPauseGameEnabled(context)) {
+    throw new Error('fight action cannot run while pauseGame is enabled.');
+  }
+  if (Number(global.time) < 1000) {
+    throw new Error('fight action cannot run before the first second of game time has elapsed.');
+  }
+
+  ensureFightTargetExists(context);
+
+  const wasFighting = Boolean(global.fighting);
+  context.fightManual();
+  return {
+    wasFighting,
+    fighting: Boolean(global.fighting),
+    mapsActive: Boolean(global.mapsActive),
+    preMapsActive: Boolean(global.preMapsActive),
+    currentMapId: global.currentMapId || '',
+    lastClearedCell: global.lastClearedCell,
+  };
+}
+
+function ensureFightTargetExists(context) {
+  const global = getLegacyGlobal(context);
+  const cellIndex = global.mapsActive ? global.lastClearedMapCell + 1 : global.lastClearedCell + 1;
+  const gridName = global.mapsActive ? 'mapGridArray' : 'gridArray';
+  const grid = global[gridName];
+  if (Array.isArray(grid) && grid[cellIndex]) return;
+
+  if (global.mapsActive) {
+    throw new Error(`fight action requires an initialized map cell at index ${cellIndex}.`);
+  }
+
+  assertLegacyFunction(context, 'buildGrid');
+  context.buildGrid();
+  if (typeof context.drawGrid === 'function') context.drawGrid();
+  if (!global.gridArray || !global.gridArray[cellIndex]) {
+    throw new Error(`fight action could not initialize world cell at index ${cellIndex}.`);
+  }
+}
+
+function normalizeMapId(id) {
+  if (typeof id !== 'string' || id.trim().length === 0) {
+    throw new Error('runMap action requires a non-empty string id.');
+  }
+  return id;
+}
+
+function lookupOwnedMapById(context, id) {
+  const global = getLegacyGlobal(context);
+  if (!Array.isArray(global.mapsOwnedArray)) throw new Error('Legacy game.global.mapsOwnedArray is unavailable.');
+  const map = global.mapsOwnedArray.find((candidate) => candidate && candidate.id === id);
+  if (!map) throw new Error(`Unknown owned map id: ${id}`);
+  return map;
+}
+
+function dispatchRunMapAction(context, action) {
+  const id = normalizeMapId(action.id);
+  assertLegacyFunction(context, 'mapsClicked');
+  assertLegacyFunction(context, 'selectMap');
+  assertLegacyFunction(context, 'runMap');
+
+  const global = getLegacyGlobal(context);
+  if (!global.mapsUnlocked) throw new Error('runMap action requires maps to be unlocked.');
+  if (isPauseGameEnabled(context)) {
+    throw new Error('runMap action cannot run while pauseGame is enabled.');
+  }
+  lookupOwnedMapById(context, id);
+
+  if (!global.preMapsActive) context.mapsClicked(true);
+  if (!global.preMapsActive) {
+    throw new Error('runMap action could not enter the map chamber through legacy mapsClicked().');
+  }
+
+  context.selectMap(id, true);
+  if (global.lookingAtMap !== id) {
+    throw new Error(`runMap action could not select owned map id: ${id}`);
+  }
+
+  context.runMap();
+  return {
+    currentMapId: global.currentMapId || '',
+    mapsActive: Boolean(global.mapsActive),
+    preMapsActive: Boolean(global.preMapsActive),
+    lookingAtMap: global.lookingAtMap || '',
+  };
+}
+
 function dispatchLegacyAction(context, runtime, action) {
   switch (getActionType(action)) {
     case 'load': {
@@ -98,9 +205,9 @@ function dispatchLegacyAction(context, runtime, action) {
       return buyLegacyJob(context, purchase.targetName, purchase.amount);
     }
     case 'fight':
-      throw new Error('fight is not yet exposed through the headless action boundary.');
+      return dispatchFightAction(context);
     case 'runMap':
-      throw new Error('runMap is not yet exposed through the headless action boundary.');
+      return dispatchRunMapAction(context, action);
     default:
       throw new Error(`Unsupported runtime action: ${String(action.type)}`);
   }
@@ -110,8 +217,16 @@ module.exports = {
   ACTION_TARGETS,
   GATHER_RESOURCES,
   assertUnlocked,
+  assertLegacyFunction,
+  dispatchFightAction,
   dispatchLegacyAction,
+  dispatchRunMapAction,
+  ensureFightTargetExists,
+  getLegacyGlobal,
   getValidatedPurchase,
+  isPauseGameEnabled,
   lookupExactTarget,
+  lookupOwnedMapById,
+  normalizeMapId,
   normalizePositiveInteger,
 };
