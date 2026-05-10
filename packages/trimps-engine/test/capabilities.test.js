@@ -62,3 +62,27 @@ test('capabilities mark fight and runMap available when prerequisites are visibl
   assert.deepEqual(capabilities.fight, { available: true, reason: null });
   assert.deepEqual(capabilities.runMap, { available: true, reason: null });
 });
+
+test('capabilities gate legacy-blocked actions while pauseGame is enabled', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  runtime.context.game.options.menu.pauseGame.enabled = true;
+  runtime.context.game.resources.food.owned = 100;
+  runtime.context.game.resources.wood.owned = 100;
+  runtime.context.game.buildings.Trap.locked = 0;
+  runtime.context.game.jobs.Farmer.locked = 0;
+  runtime.context.game.equipment.Shield.locked = 0;
+  runtime.context.game.upgrades.Battle.done = 1;
+  runtime.context.game.global.mapsUnlocked = true;
+  runtime.context.game.global.mapsOwnedArray.push({ id: 'map1', name: 'Map', level: 6 });
+
+  const snapshot = runtime.snapshot();
+  const capabilities = getActionCapabilities(snapshot);
+
+  assert.equal(snapshot.pauseGame, true);
+  assert.deepEqual(capabilities.buyBuilding.Trap, { available: false, reason: 'game paused' });
+  assert.deepEqual(capabilities.buyJob.Farmer, { available: false, reason: 'game paused' });
+  assert.deepEqual(capabilities.buyEquipment.Shield, { available: false, reason: 'game paused' });
+  assert.deepEqual(capabilities.buyUpgrade.Battle, { available: false, reason: 'game paused' });
+  assert.deepEqual(capabilities.fight, { available: false, reason: 'game paused' });
+  assert.deepEqual(capabilities.runMap, { available: false, reason: 'game paused' });
+});

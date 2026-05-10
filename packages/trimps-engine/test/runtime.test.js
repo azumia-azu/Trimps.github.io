@@ -29,6 +29,7 @@ function getGoldenSnapshotShape(snapshot) {
     mapsActive: snapshot.mapsActive,
     fighting: snapshot.fighting,
     pauseFight: snapshot.pauseFight,
+    pauseGame: snapshot.pauseGame,
     challenge: snapshot.challenge,
     resources: snapshot.resources,
     buildingNames: names(snapshot.buildings),

@@ -14,10 +14,14 @@ function itemCapability(item) {
   return { available: true, reason: null };
 }
 
-function keyedCapabilities(items) {
+function keyedCapabilities(items, options = {}) {
   if (!Array.isArray(items)) return {};
   return items.reduce((capabilities, item) => {
-    if (item && item.name) capabilities[item.name] = itemCapability(item);
+    if (item && item.name) {
+      capabilities[item.name] = options.pauseGame
+        ? { available: false, reason: 'game paused' }
+        : itemCapability(item);
+    }
     return capabilities;
   }, {});
 }
@@ -29,6 +33,7 @@ function findUpgrade(snapshot, name) {
 }
 
 function getFightCapability(snapshot) {
+  if (snapshot.pauseGame) return { available: false, reason: 'game paused' };
   const battle = findUpgrade(snapshot, 'Battle');
   if (!battle || !battle.done) {
     return { available: false, reason: 'Battle upgrade not unlocked' };
@@ -37,6 +42,7 @@ function getFightCapability(snapshot) {
 }
 
 function getRunMapCapability(snapshot) {
+  if (snapshot.pauseGame) return { available: false, reason: 'game paused' };
   if (!snapshot.mapsUnlocked) return { available: false, reason: 'maps not unlocked' };
   if (!Array.isArray(snapshot.ownedMaps) || snapshot.ownedMaps.length === 0) {
     return { available: false, reason: 'no owned maps' };
@@ -46,14 +52,15 @@ function getRunMapCapability(snapshot) {
 
 function getActionCapabilities(snapshot) {
   const safeSnapshot = snapshot || {};
+  const pauseOptions = { pauseGame: Boolean(safeSnapshot.pauseGame) };
   return {
     load: { available: true, reason: null },
     save: { available: true, reason: null },
     gather: Object.assign({}, GATHER_CAPABILITIES),
-    buyBuilding: keyedCapabilities(safeSnapshot.buildings),
-    buyJob: keyedCapabilities(safeSnapshot.jobs),
-    buyEquipment: keyedCapabilities(safeSnapshot.equipment),
-    buyUpgrade: keyedCapabilities(safeSnapshot.upgrades),
+    buyBuilding: keyedCapabilities(safeSnapshot.buildings, pauseOptions),
+    buyJob: keyedCapabilities(safeSnapshot.jobs, pauseOptions),
+    buyEquipment: keyedCapabilities(safeSnapshot.equipment, pauseOptions),
+    buyUpgrade: keyedCapabilities(safeSnapshot.upgrades, pauseOptions),
     fight: getFightCapability(safeSnapshot),
     runMap: getRunMapCapability(safeSnapshot),
     setBuyAmount: { available: true, reason: null },

@@ -6,6 +6,7 @@
   "mapsActive": false,
   "fighting": false,
   "pauseFight": true,
+  "pauseGame": false,
   "challenge": null,
   "resources": {
     "food": {

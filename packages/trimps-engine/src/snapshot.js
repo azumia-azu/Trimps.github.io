@@ -31,6 +31,7 @@ function getMessagePreferences(messages) {
 
 function createSnapshot(game) {
   const globalState = game.global || {};
+  const pauseGameOption = game.options && game.options.menu && game.options.menu.pauseGame;
   const purchasables = getPurchasableSnapshots(game);
   const combat = getCombatSnapshot(globalState);
   const snapshot = {
@@ -45,6 +46,7 @@ function createSnapshot(game) {
     mapsUnlocked: Boolean(getOwnDataValue(globalState, 'mapsUnlocked')),
     preMapsActive: Boolean(getOwnDataValue(globalState, 'preMapsActive')),
     pauseFight: Boolean(getOwnDataValue(globalState, 'pauseFight')),
+    pauseGame: Boolean(pauseGameOption && pauseGameOption.enabled),
     mapsActive: Boolean(globalState.mapsActive),
     fighting: Boolean(globalState.fighting),
     mode: getMode(globalState),
