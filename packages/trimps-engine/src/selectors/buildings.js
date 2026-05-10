@@ -10,7 +10,7 @@ function getBuildingSnapshot(game, name, building) {
   };
 
   addNumberField(snapshot, building, 'craftTime');
-  snapshot.canAfford = canAffordCost(game, building, {
+  snapshot.canAfford = name !== 'Hub' && canAffordCost(game, building, {
     buyAmt: game.global && game.global.buyAmt,
     countKey: 'purchased',
     itemType: 'building',
@@ -28,7 +28,7 @@ function getJobSnapshot(game, name, job) {
 
   addNumberField(snapshot, job, 'max');
   addStringField(snapshot, job, 'increase');
-  snapshot.canAfford = canAffordJob(game, job, game.global && game.global.buyAmt);
+  snapshot.canAfford = name !== 'Amalgamator' && canAffordJob(game, job, game.global && game.global.buyAmt);
   return snapshot;
 }
 

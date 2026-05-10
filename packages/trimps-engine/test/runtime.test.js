@@ -112,6 +112,27 @@ test('snapshot affordability applies legacy structure and equipment price modifi
   assert.equal(shield.canAfford, true);
 });
 
+test('snapshot affordability excludes non-manual Hub building purchases', () => {
+  const runtime = createRuntime();
+  runtime.context.game.buildings.Hub.locked = 0;
+
+  const snapshot = runtime.snapshot();
+  const hub = snapshot.buildings.find((building) => building.name === 'Hub');
+
+  assert.equal(hub.canAfford, false);
+});
+
+test('snapshot affordability excludes non-manual Amalgamator job purchases', () => {
+  const runtime = createRuntime();
+  runtime.context.game.jobs.Amalgamator.locked = 0;
+  runtime.context.game.resources.trimps.owned = 10;
+
+  const snapshot = runtime.snapshot();
+  const amalgamator = snapshot.jobs.find((job) => job.name === 'Amalgamator');
+
+  assert.equal(amalgamator.canAfford, false);
+});
+
 test('snapshot affordability gates Coordination by trimps send capacity', () => {
   const runtime = createRuntime();
   const coordination = runtime.context.game.upgrades.Coordination;
