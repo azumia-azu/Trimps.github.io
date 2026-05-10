@@ -23,11 +23,16 @@ function canAffordCoordinationTrimps(game) {
   return realMax >= currentSend * 3;
 }
 
+function passesSpecialFilter(upgrade) {
+  if (!upgrade || typeof upgrade.specialFilter !== 'function') return true;
+  return Boolean(upgrade.specialFilter());
+}
+
 function getUpgradeSnapshot(game, name, upgrade) {
   const locked = Boolean(toNumber(getOwnDataValue(upgrade, 'locked'), 0));
   const done = Boolean(toNumber(getOwnDataValue(upgrade, 'done'), 0));
   const allowed = toNumber(getOwnDataValue(upgrade, 'allowed'), 0);
-  let canAfford = canAffordCost(game, upgrade, { buyAmt: 1, countKey: 'done' });
+  let canAfford = passesSpecialFilter(upgrade) && canAffordCost(game, upgrade, { buyAmt: 1, countKey: 'done' });
   if (name === 'Coordination') canAfford = canAfford && canAffordCoordinationTrimps(game);
   return {
     name,
@@ -47,4 +52,5 @@ module.exports = {
   canAffordCoordinationTrimps,
   getUpgradeSnapshot,
   getUpgradesSnapshot,
+  passesSpecialFilter,
 };

@@ -151,6 +151,27 @@ test('snapshot affordability gates Coordination by trimps send capacity', () => 
   assert.equal(coordinationSnapshot.canAfford, false);
 });
 
+test('snapshot upgrade affordability respects legacy special filters', () => {
+  const runtime = createRuntime();
+  const shieldblock = runtime.context.game.upgrades.Shieldblock;
+  shieldblock.locked = 0;
+  runtime.context.game.equipment.Shield.prestige = 2;
+  runtime.context.game.resources.science.owned = 3000;
+  runtime.context.game.resources.wood.owned = 10000;
+
+  const blockedSnapshot = runtime.snapshot();
+  const blockedShieldblock = blockedSnapshot.upgrades.find((upgrade) => upgrade.name === 'Shieldblock');
+
+  assert.equal(blockedShieldblock.canAfford, false);
+
+  runtime.context.game.equipment.Shield.prestige = 3;
+
+  const readySnapshot = runtime.snapshot();
+  const readyShieldblock = readySnapshot.upgrades.find((upgrade) => upgrade.name === 'Shieldblock');
+
+  assert.equal(readyShieldblock.canAfford, true);
+});
+
 test('snapshot job affordability reads computed employed trimps', () => {
   const runtime = createRuntime();
   runtime.context.game.jobs.Farmer.locked = 0;
