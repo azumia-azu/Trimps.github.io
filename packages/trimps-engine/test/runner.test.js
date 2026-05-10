@@ -90,4 +90,15 @@ test('runtime runner validates loop options', async () => {
     () => runRuntimeLoop({ runtime: createRuntimeStub(), frames: -1 }),
     /frames must be a non-negative integer/,
   );
+  await assert.rejects(
+    () => runRuntimeLoop({
+      runtime: createRuntimeStub(),
+      frames: 0,
+      intervalMs: 0,
+      onSnapshot() {
+        throw new Error('loop started despite zero interval');
+      },
+    }),
+    /intervalMs must be greater than 0 when frames is 0/,
+  );
 });

@@ -54,6 +54,10 @@ async function runRuntimeLoop(options = {}) {
     'initialDeltaMs',
   );
 
+  if (frames === 0 && intervalMs === 0) {
+    throw new Error('intervalMs must be greater than 0 when frames is 0.');
+  }
+
   if (frames === 0) {
     await renderFrame(runtime, initialDeltaMs, onSnapshot);
     while (true) {
