@@ -28,6 +28,7 @@ function createLegacyRuntimeContext(options = {}) {
   const platformPort = options.platformPort || createHeadlessPlatformPort(options);
   const context = platformPort.createContext(rootDir);
   loadLegacyScripts(context, rootDir);
+  if (typeof context.__trimpsClearBrowserTimers === 'function') context.__trimpsClearBrowserTimers();
 
   if (!context.game || !context.game.global) {
     throw new Error('Legacy Trimps runtime did not create a game object.');

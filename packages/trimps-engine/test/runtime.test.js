@@ -112,6 +112,23 @@ test('snapshot affordability applies legacy structure and equipment price modifi
   assert.equal(shield.canAfford, true);
 });
 
+test('snapshot affordability gates Coordination by trimps send capacity', () => {
+  const runtime = createRuntime();
+  const coordination = runtime.context.game.upgrades.Coordination;
+  coordination.locked = 0;
+  runtime.context.game.resources.trimps.max = 2;
+  runtime.context.game.resources.trimps.maxSoldiers = 1;
+  runtime.context.game.resources.science.owned = 250;
+  runtime.context.game.resources.food.owned = 600;
+  runtime.context.game.resources.wood.owned = 600;
+  runtime.context.game.resources.metal.owned = 300;
+
+  const snapshot = runtime.snapshot();
+  const coordinationSnapshot = snapshot.upgrades.find((upgrade) => upgrade.name === 'Coordination');
+
+  assert.equal(coordinationSnapshot.canAfford, false);
+});
+
 test('snapshot includes owned maps and current combat cell summaries', () => {
   const runtime = createRuntime();
   runtime.context.game.global.mapsOwnedArray.push({

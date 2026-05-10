@@ -226,6 +226,35 @@ function createBrowserContext(rootDir, options = {}) {
   const document = createDocumentMock();
   const clockPort = options.clockPort || createSystemClockPort();
   const localStorage = options.storagePort || createMemoryStoragePort();
+  const activeTimers = new Map();
+
+  function unrefTimer(timerId) {
+    if (timerId && typeof timerId.unref === 'function') timerId.unref();
+    return timerId;
+  }
+
+  function setBrowserTimeout(callback, delayMs, ...args) {
+    const timerId = unrefTimer(clockPort.setTimeout((...callbackArgs) => {
+      activeTimers.delete(timerId);
+      callback(...callbackArgs);
+    }, delayMs, ...args));
+    activeTimers.set(timerId, 'timeout');
+    return timerId;
+  }
+
+  function setBrowserInterval(callback, delayMs, ...args) {
+    const timerId = unrefTimer(clockPort.setInterval(callback, delayMs, ...args));
+    activeTimers.set(timerId, 'interval');
+    return timerId;
+  }
+
+  function clearBrowserTimer(timerId) {
+    const timerType = activeTimers.get(timerId);
+    activeTimers.delete(timerId);
+    if (timerType === 'interval') clockPort.clearInterval(timerId);
+    else clockPort.clearTimeout(timerId);
+  }
+
   const context = {
     console: {
       error: console.error.bind(console),
@@ -258,8 +287,12 @@ function createBrowserContext(rootDir, options = {}) {
     btoa(value) {
       return Buffer.from(String(value), 'binary').toString('base64');
     },
-    clearInterval() {},
-    clearTimeout() {},
+    clearInterval(timerId) {
+      clearBrowserTimer(timerId);
+    },
+    clearTimeout(timerId) {
+      clearBrowserTimer(timerId);
+    },
     confirm() {
       return false;
     },
@@ -271,12 +304,16 @@ function createBrowserContext(rootDir, options = {}) {
       return 0;
     },
     cancelAnimationFrame() {},
-    setInterval() {
-      return 0;
+    setInterval(callback, delayMs, ...args) {
+      return setBrowserInterval(callback, delayMs, ...args);
     },
-    setTimeout() {
-      return 0;
+    setTimeout(callback, delayMs, ...args) {
+      return setBrowserTimeout(callback, delayMs, ...args);
     },
+  };
+
+  context.__trimpsClearBrowserTimers = function clearBrowserTimers() {
+    Array.from(activeTimers.keys()).forEach((timerId) => clearBrowserTimer(timerId));
   };
 
   context.window = context;

@@ -9,6 +9,7 @@ const { createFileStoragePort, createMemoryStoragePort } = require('../src/ports
 const { createHeadlessPlatformPort } = require('../src/ports/platform-port');
 const { createLegacyRuntimeContext } = require('../src/legacy-loader');
 const { createTrimpsRuntime } = require('../src/headless-runtime');
+const { createBrowserContext } = require('../src/platform');
 
 const rootDir = path.resolve(__dirname, '../../..');
 
@@ -72,6 +73,25 @@ test('manual clock port schedules timeout and interval callbacks on advance', ()
 
   clockPort.clearInterval(intervalId);
   clockPort.advance(100);
+  assert.deepEqual(events, ['interval', 'timeout', 'interval']);
+});
+
+test('browser context timers are routed through the injected clock port', () => {
+  const clockPort = createManualClockPort(1000);
+  const context = createBrowserContext(rootDir, { clockPort });
+  const events = [];
+
+  context.setTimeout((label) => events.push(label), 100, 'timeout');
+  const intervalId = context.setInterval(() => events.push('interval'), 50);
+
+  clockPort.advance(50);
+  assert.deepEqual(events, ['interval']);
+
+  clockPort.advance(50);
+  assert.deepEqual(events, ['interval', 'timeout', 'interval']);
+
+  context.clearInterval(intervalId);
+  clockPort.advance(50);
   assert.deepEqual(events, ['interval', 'timeout', 'interval']);
 });
 
