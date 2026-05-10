@@ -38,6 +38,10 @@ function getFightCapability(snapshot) {
   if (!battle || !battle.done) {
     return { available: false, reason: 'Battle upgrade not unlocked' };
   }
+  const gameTime = Number(snapshot.time);
+  if (!Number.isFinite(gameTime) || gameTime < 1000) {
+    return { available: false, reason: 'first second not elapsed' };
+  }
   return { available: true, reason: null };
 }
 
@@ -46,6 +50,10 @@ function getRunMapCapability(snapshot) {
   if (!snapshot.mapsUnlocked) return { available: false, reason: 'maps not unlocked' };
   if (!Array.isArray(snapshot.ownedMaps) || snapshot.ownedMaps.length === 0) {
     return { available: false, reason: 'no owned maps' };
+  }
+  const mapologyCredits = Number(snapshot.mapologyCredits);
+  if (snapshot.challenge === 'Mapology' && !snapshot.currentMapId && (!Number.isFinite(mapologyCredits) || mapologyCredits < 1)) {
+    return { available: false, reason: 'no map credits' };
   }
   return { available: true, reason: null };
 }

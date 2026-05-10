@@ -31,11 +31,13 @@ function getMessagePreferences(messages) {
 
 function createSnapshot(game) {
   const globalState = game.global || {};
+  const mapologyChallenge = game.challenges && game.challenges.Mapology;
   const pauseGameOption = game.options && game.options.menu && game.options.menu.pauseGame;
   const purchasables = getPurchasableSnapshots(game);
   const combat = getCombatSnapshot(globalState);
   const snapshot = {
     world: globalState.world,
+    time: toNumber(getOwnDataValue(globalState, 'time'), 0),
     lastClearedCell: globalState.lastClearedCell,
     lastClearedMapCell: toNumber(getOwnDataValue(globalState, 'lastClearedMapCell'), -1),
     currentMapId: toStringOrNull(getOwnDataValue(globalState, 'currentMapId')),
@@ -52,6 +54,7 @@ function createSnapshot(game) {
     mode: getMode(globalState),
     challenge: toStringOrNull(getOwnDataValue(globalState, 'challengeActive')),
     selectedChallenge: toStringOrNull(getOwnDataValue(globalState, 'selectedChallenge')),
+    mapologyCredits: toNumber(getOwnDataValue(mapologyChallenge, 'credits'), 0),
     resources: getResourcesSnapshot(game.resources),
     buildings: purchasables.buildings,
     jobs: purchasables.jobs,

@@ -54,6 +54,7 @@ test('runtime exposes current action capabilities', () => {
 test('capabilities mark fight and runMap available when prerequisites are visible', () => {
   const runtime = createTrimpsRuntime({ rootDir });
   runtime.context.game.upgrades.Battle.done = 1;
+  runtime.context.game.global.time = 1000;
   runtime.context.game.global.mapsUnlocked = true;
   runtime.context.game.global.mapsOwnedArray.push({ id: 'map1', name: 'Map', level: 6 });
 
@@ -85,4 +86,41 @@ test('capabilities gate legacy-blocked actions while pauseGame is enabled', () =
   assert.deepEqual(capabilities.buyUpgrade.Battle, { available: false, reason: 'game paused' });
   assert.deepEqual(capabilities.fight, { available: false, reason: 'game paused' });
   assert.deepEqual(capabilities.runMap, { available: false, reason: 'game paused' });
+});
+
+test('capabilities gate fight before the first second of game time', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  runtime.context.game.upgrades.Battle.done = 1;
+  runtime.context.game.global.time = 999;
+
+  const earlyCapabilities = runtime.capabilities();
+  assert.deepEqual(earlyCapabilities.fight, {
+    available: false,
+    reason: 'first second not elapsed',
+  });
+
+  runtime.context.game.global.time = 1000;
+
+  const readyCapabilities = runtime.capabilities();
+  assert.deepEqual(readyCapabilities.fight, { available: true, reason: null });
+});
+
+test('capabilities gate runMap when Mapology has no available credits', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  runtime.context.game.global.challengeActive = 'Mapology';
+  runtime.context.game.global.mapsUnlocked = true;
+  runtime.context.game.challenges.Mapology.credits = 0;
+  runtime.context.game.global.currentMapId = '';
+  runtime.context.game.global.mapsOwnedArray.push({ id: 'map1', name: 'Map', level: 6 });
+
+  const blockedCapabilities = runtime.capabilities();
+  assert.deepEqual(blockedCapabilities.runMap, {
+    available: false,
+    reason: 'no map credits',
+  });
+
+  runtime.context.game.challenges.Mapology.credits = 1;
+
+  const readyCapabilities = runtime.capabilities();
+  assert.deepEqual(readyCapabilities.runMap, { available: true, reason: null });
 });
