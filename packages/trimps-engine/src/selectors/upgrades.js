@@ -1,5 +1,5 @@
 const { canAffordCost } = require('./affordability');
-const { getItemEntries, getOwnDataValue, toNumber } = require('./helpers');
+const { getItemEntries, getOwnDataValue, getValue, toNumber } = require('./helpers');
 
 function canAffordCoordinationTrimps(game) {
   const trimps = game.resources && game.resources.trimps;
@@ -7,7 +7,7 @@ function canAffordCoordinationTrimps(game) {
 
   if (game.global && game.global.challengeActive === 'Trappapalooza') {
     const owned = toNumber(getOwnDataValue(trimps, 'owned'), 0);
-    const employed = toNumber(getOwnDataValue(trimps, 'employed'), 0);
+    const employed = toNumber(getValue(trimps, 'employed'), 0);
     const currentSend = typeof trimps.getCurrentSend === 'function'
       ? toNumber(trimps.getCurrentSend(), 0)
       : toNumber(getOwnDataValue(trimps, 'maxSoldiers'), 0);

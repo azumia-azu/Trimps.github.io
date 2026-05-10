@@ -129,6 +129,40 @@ test('snapshot affordability gates Coordination by trimps send capacity', () => 
   assert.equal(coordinationSnapshot.canAfford, false);
 });
 
+test('snapshot job affordability reads computed employed trimps', () => {
+  const runtime = createRuntime();
+  runtime.context.game.jobs.Farmer.locked = 0;
+  runtime.context.game.jobs.Farmer.owned = 10;
+  runtime.context.game.resources.trimps.owned = 10;
+  runtime.context.game.resources.food.owned = 5;
+
+  const snapshot = runtime.snapshot();
+  const farmer = snapshot.jobs.find((job) => job.name === 'Farmer');
+
+  assert.equal(runtime.context.game.resources.trimps.employed, 10);
+  assert.equal(farmer.canAfford, false);
+});
+
+test('snapshot Trappapalooza Coordination affordability reads computed employed trimps', () => {
+  const runtime = createRuntime();
+  const coordination = runtime.context.game.upgrades.Coordination;
+  coordination.locked = 0;
+  runtime.context.game.global.challengeActive = 'Trappapalooza';
+  runtime.context.game.jobs.Farmer.owned = 10;
+  runtime.context.game.resources.trimps.owned = 10;
+  runtime.context.game.resources.trimps.maxSoldiers = 4;
+  runtime.context.game.resources.science.owned = 250;
+  runtime.context.game.resources.food.owned = 600;
+  runtime.context.game.resources.wood.owned = 600;
+  runtime.context.game.resources.metal.owned = 300;
+
+  const snapshot = runtime.snapshot();
+  const coordinationSnapshot = snapshot.upgrades.find((upgrade) => upgrade.name === 'Coordination');
+
+  assert.equal(runtime.context.game.resources.trimps.employed, 10);
+  assert.equal(coordinationSnapshot.canAfford, false);
+});
+
 test('snapshot includes owned maps and current combat cell summaries', () => {
   const runtime = createRuntime();
   runtime.context.game.global.mapsOwnedArray.push({

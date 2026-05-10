@@ -1,4 +1,4 @@
-const { getOwnDataValue, toNumber } = require('./helpers');
+const { getOwnDataValue, getValue, toNumber } = require('./helpers');
 
 function normalizePurchaseAmount(buyAmt) {
   if (buyAmt === 'Max') return 1;
@@ -70,7 +70,7 @@ function canAffordJob(game, job, buyAmt) {
   const amount = normalizePurchaseAmount(buyAmt);
   const trimps = game.resources && game.resources.trimps;
   const owned = toNumber(getOwnDataValue(trimps, 'owned'), 0);
-  const employed = toNumber(getOwnDataValue(trimps, 'employed'), 0);
+  const employed = toNumber(getValue(trimps, 'employed'), 0);
   const max = toNumber(getOwnDataValue(job, 'max'), Infinity);
   const currentOwned = toNumber(getOwnDataValue(job, 'owned'), 0);
   if (currentOwned + amount > max) return false;

@@ -4,6 +4,11 @@ function getOwnDataValue(source, key) {
   return descriptor && Object.prototype.hasOwnProperty.call(descriptor, 'value') ? descriptor.value : undefined;
 }
 
+function getValue(source, key) {
+  if (!source || !Object.prototype.hasOwnProperty.call(source, key)) return undefined;
+  return source[key];
+}
+
 function toNumber(value, fallback) {
   if (typeof value === 'undefined' || value === null || value === '') return fallback;
   const numericValue = Number(value);
@@ -48,6 +53,7 @@ module.exports = {
   deepFreeze,
   getItemEntries,
   getOwnDataValue,
+  getValue,
   toNullableNumber,
   toNumber,
   toStringOrNull,
