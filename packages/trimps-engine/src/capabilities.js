@@ -1,17 +1,19 @@
-const GATHER_CAPABILITIES = Object.freeze({
-  buildings: true,
-  food: true,
-  metal: true,
-  science: true,
-  trimps: true,
-  wood: true,
-});
+const GATHER_TARGETS = Object.freeze(['buildings', 'food', 'metal', 'science', 'trimps', 'wood']);
+
+function availableCapability() {
+  return { available: true, reason: null };
+}
+
+const GATHER_CAPABILITIES = Object.freeze(GATHER_TARGETS.reduce((capabilities, target) => {
+  capabilities[target] = availableCapability();
+  return capabilities;
+}, {}));
 
 function itemCapability(item) {
   if (!item) return { available: false, reason: 'missing' };
   if (item.locked) return { available: false, reason: 'locked' };
   if (!item.canAfford) return { available: false, reason: 'cannot afford' };
-  return { available: true, reason: null };
+  return availableCapability();
 }
 
 function keyedCapabilities(items, options = {}) {
@@ -32,6 +34,24 @@ function findUpgrade(snapshot, name) {
     : null;
 }
 
+function gatherCapability(snapshot, target) {
+  if (snapshot.pauseGame) return { available: false, reason: 'game paused' };
+  if (target === 'science' && snapshot.challenge === 'Scientist') {
+    return { available: false, reason: 'blocked by Scientist challenge' };
+  }
+  if (target === 'metal' && snapshot.challenge === 'Transmute') {
+    return { available: false, reason: 'blocked by Transmute challenge' };
+  }
+  return availableCapability();
+}
+
+function getGatherCapabilities(snapshot) {
+  return GATHER_TARGETS.reduce((capabilities, target) => {
+    capabilities[target] = gatherCapability(snapshot, target);
+    return capabilities;
+  }, {});
+}
+
 function getFightCapability(snapshot) {
   if (snapshot.pauseGame) return { available: false, reason: 'game paused' };
   const battle = findUpgrade(snapshot, 'Battle');
@@ -42,7 +62,7 @@ function getFightCapability(snapshot) {
   if (!Number.isFinite(gameTime) || gameTime < 1000) {
     return { available: false, reason: 'first second not elapsed' };
   }
-  return { available: true, reason: null };
+  return availableCapability();
 }
 
 function getRunMapCapability(snapshot) {
@@ -55,7 +75,7 @@ function getRunMapCapability(snapshot) {
   if (snapshot.challenge === 'Mapology' && !snapshot.currentMapId && (!Number.isFinite(mapologyCredits) || mapologyCredits < 1)) {
     return { available: false, reason: 'no map credits' };
   }
-  return { available: true, reason: null };
+  return availableCapability();
 }
 
 function getActionCapabilities(snapshot) {
@@ -64,7 +84,7 @@ function getActionCapabilities(snapshot) {
   return {
     load: { available: true, reason: null },
     save: { available: true, reason: null },
-    gather: Object.assign({}, GATHER_CAPABILITIES),
+    gather: getGatherCapabilities(safeSnapshot),
     buyBuilding: keyedCapabilities(safeSnapshot.buildings, pauseOptions),
     buyJob: keyedCapabilities(safeSnapshot.jobs, pauseOptions),
     buyEquipment: keyedCapabilities(safeSnapshot.equipment, pauseOptions),
@@ -79,5 +99,6 @@ function getActionCapabilities(snapshot) {
 
 module.exports = {
   GATHER_CAPABILITIES,
+  GATHER_TARGETS,
   getActionCapabilities,
 };

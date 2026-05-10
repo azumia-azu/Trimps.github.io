@@ -29,12 +29,12 @@ test('derives gather and purchase capabilities from a snapshot', () => {
   const capabilities = getActionCapabilities(runtime.snapshot());
 
   assert.deepEqual(capabilities.gather, {
-    buildings: true,
-    food: true,
-    metal: true,
-    science: true,
-    trimps: true,
-    wood: true,
+    buildings: { available: true, reason: null },
+    food: { available: true, reason: null },
+    metal: { available: true, reason: null },
+    science: { available: true, reason: null },
+    trimps: { available: true, reason: null },
+    wood: { available: true, reason: null },
   });
   assert.deepEqual(capabilities.buyBuilding.Trap, { available: true, reason: null });
   assert.equal(capabilities.buyBuilding.Hut.available, false);
@@ -84,8 +84,32 @@ test('capabilities gate legacy-blocked actions while pauseGame is enabled', () =
   assert.deepEqual(capabilities.buyJob.Farmer, { available: false, reason: 'game paused' });
   assert.deepEqual(capabilities.buyEquipment.Shield, { available: false, reason: 'game paused' });
   assert.deepEqual(capabilities.buyUpgrade.Battle, { available: false, reason: 'game paused' });
+  assert.deepEqual(capabilities.gather.food, { available: false, reason: 'game paused' });
+  assert.deepEqual(capabilities.gather.buildings, { available: false, reason: 'game paused' });
   assert.deepEqual(capabilities.fight, { available: false, reason: 'game paused' });
   assert.deepEqual(capabilities.runMap, { available: false, reason: 'game paused' });
+});
+
+test('capabilities gate gather targets blocked by active challenges', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  runtime.context.game.global.challengeActive = 'Scientist';
+  const scientistCapabilities = runtime.capabilities();
+
+  assert.deepEqual(scientistCapabilities.gather.science, {
+    available: false,
+    reason: 'blocked by Scientist challenge',
+  });
+  assert.deepEqual(scientistCapabilities.gather.metal, { available: true, reason: null });
+
+  runtime.context.game.global.challengeActive = 'Transmute';
+  const transmuteCapabilities = runtime.capabilities();
+
+  assert.deepEqual(transmuteCapabilities.gather.metal, {
+    available: false,
+    reason: 'blocked by Transmute challenge',
+  });
+  assert.deepEqual(transmuteCapabilities.gather.science, { available: true, reason: null });
 });
 
 test('capabilities gate fight before the first second of game time', () => {
