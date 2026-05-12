@@ -33,7 +33,8 @@
       "soldiers": 0,
       "maxSoldiers": 1,
       "potency": 0.0085,
-      "speed": 5
+      "speed": 5,
+      "employed": 0
     }
   },
   "buildingNames": [

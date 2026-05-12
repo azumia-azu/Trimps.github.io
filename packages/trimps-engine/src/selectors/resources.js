@@ -1,4 +1,4 @@
-const { addNumberField, getOwnDataValue, toNullableNumber, toNumber } = require('./helpers');
+const { addNumberField, getOwnDataValue, getValue, toNullableNumber, toNumber } = require('./helpers');
 
 function getResourceSnapshot(resource) {
   if (!resource) return { owned: 0, max: null };
@@ -17,7 +17,7 @@ function getTrimpsSnapshot(trimps) {
   addNumberField(snapshot, trimps, 'maxSoldiers');
   addNumberField(snapshot, trimps, 'potency');
   addNumberField(snapshot, trimps, 'speed');
-  addNumberField(snapshot, trimps, 'employed');
+  snapshot.employed = toNumber(getValue(trimps, 'employed'), 0);
   return snapshot;
 }
 

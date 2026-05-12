@@ -221,6 +221,7 @@ test('snapshot job affordability reads computed employed trimps', () => {
   const farmer = snapshot.jobs.find((job) => job.name === 'Farmer');
 
   assert.equal(runtime.context.game.resources.trimps.employed, 10);
+  assert.equal(snapshot.resources.trimps.employed, 10);
   assert.equal(farmer.canAfford, false);
 });
 
@@ -241,6 +242,7 @@ test('snapshot Trappapalooza Coordination affordability reads computed employed 
   const coordinationSnapshot = snapshot.upgrades.find((upgrade) => upgrade.name === 'Coordination');
 
   assert.equal(runtime.context.game.resources.trimps.employed, 10);
+  assert.equal(snapshot.resources.trimps.employed, 10);
   assert.equal(coordinationSnapshot.canAfford, false);
 });
 
