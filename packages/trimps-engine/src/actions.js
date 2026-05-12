@@ -138,12 +138,17 @@ function getValidatedPurchase(context, action, actionType) {
 }
 
 function buyLegacyJob(context, targetName, amount) {
-  const previousBuyAmt = context.game.global.buyAmt;
-  context.game.global.buyAmt = amount;
+  const global = getLegacyGlobal(context);
+  if (global.firing) {
+    throw new Error('buyJob action cannot run while firing mode is enabled.');
+  }
+
+  const previousBuyAmt = global.buyAmt;
+  global.buyAmt = amount;
   try {
     return context.buyJob(targetName, true, true);
   } finally {
-    context.game.global.buyAmt = previousBuyAmt;
+    global.buyAmt = previousBuyAmt;
   }
 }
 

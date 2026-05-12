@@ -181,6 +181,22 @@ test('buyUpgrade reports false without mutating when resources are insufficient'
   assert.equal(battle.locked, 0);
 });
 
+test('buyJob dispatch rejects firing mode without mutating buyAmt or jobs', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  runtime.context.game.jobs.Farmer.locked = 0;
+  runtime.context.game.jobs.Farmer.owned = 10;
+  runtime.context.game.global.buyAmt = 7;
+  runtime.context.game.global.firing = true;
+
+  assert.throws(
+    () => runtime.dispatch({ type: 'buyJob', name: 'Farmer', amount: 2 }),
+    /firing mode is enabled/,
+  );
+  assert.equal(runtime.context.game.global.buyAmt, 7);
+  assert.equal(runtime.context.game.jobs.Farmer.owned, 10);
+});
+
 test('buyUpgrade validates unknown upgrade names', () => {
   const runtime = createTrimpsRuntime({ rootDir });
 

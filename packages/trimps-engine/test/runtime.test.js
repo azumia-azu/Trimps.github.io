@@ -134,6 +134,22 @@ test('snapshot affordability excludes non-manual Amalgamator job purchases', () 
   assert.equal(amalgamator.canAfford, false);
 });
 
+test('snapshot affordability excludes Scientist job purchases during the Scientist challenge', () => {
+  const runtime = createRuntime();
+  runtime.context.game.global.challengeActive = 'Scientist';
+  runtime.context.game.jobs.Scientist.locked = 0;
+  runtime.context.game.resources.food.owned = 1000000;
+  runtime.context.game.resources.wood.owned = 1000000;
+  runtime.context.game.resources.metal.owned = 1000000;
+  runtime.context.game.resources.science.owned = 1000000;
+  runtime.context.game.resources.trimps.owned = 1000;
+
+  const snapshot = runtime.snapshot();
+  const scientist = snapshot.jobs.find((job) => job.name === 'Scientist');
+
+  assert.equal(scientist.canAfford, false);
+});
+
 test('snapshot affordability gates Coordination by trimps send capacity', () => {
   const runtime = createRuntime();
   const coordination = runtime.context.game.upgrades.Coordination;

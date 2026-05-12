@@ -28,7 +28,10 @@ function getJobSnapshot(game, name, job) {
 
   addNumberField(snapshot, job, 'max');
   addStringField(snapshot, job, 'increase');
-  snapshot.canAfford = name !== 'Amalgamator' && canAffordJob(game, job, game.global && game.global.buyAmt);
+  const challengeActive = game.global && game.global.challengeActive;
+  snapshot.canAfford = name !== 'Amalgamator'
+    && !(name === 'Scientist' && challengeActive === 'Scientist')
+    && canAffordJob(game, job, game.global && game.global.buyAmt);
   return snapshot;
 }
 
