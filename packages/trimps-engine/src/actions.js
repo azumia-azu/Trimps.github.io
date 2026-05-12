@@ -299,7 +299,7 @@ function dispatchBuyUpgradeAction(context, action) {
   if (upgrade && upgrade.locked) {
     throw new Error(`upgrades target is locked and cannot be purchased: ${action.name}`);
   }
-  const result = context.buyUpgrade(action.name, true, true, Boolean(action.heldCtrl));
+  const result = context.buyUpgrade(action.name, true, true, action.heldCtrl);
   return Boolean(result);
 }
 

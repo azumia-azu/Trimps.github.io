@@ -126,6 +126,22 @@ test('snapshot affordability excludes non-manual Hub building purchases', () => 
   assert.equal(hub.canAfford, false);
 });
 
+test('snapshot affordability gates building purchases while clearing the build queue', () => {
+  const runtime = createRuntime();
+  runtime.context.game.buildings.Trap.locked = 0;
+  runtime.context.game.resources.food.owned = 100;
+  runtime.context.game.resources.wood.owned = 100;
+
+  const readySnapshot = runtime.snapshot();
+  const readyTrap = readySnapshot.buildings.find((building) => building.name === 'Trap');
+  assert.equal(readyTrap.canAfford, true);
+
+  runtime.context.game.global.clearingBuildingQueue = true;
+  const blockedSnapshot = runtime.snapshot();
+  const blockedTrap = blockedSnapshot.buildings.find((building) => building.name === 'Trap');
+  assert.equal(blockedTrap.canAfford, false);
+});
+
 test('snapshot affordability gates Antenna by highest radon zone threshold', () => {
   const runtime = createRuntime();
   runtime.context.game.buildings.Antenna.locked = 0;

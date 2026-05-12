@@ -169,6 +169,26 @@ test('dispatches buyUpgrade through legacy upgrade flow', () => {
   assert.equal(snapshotBattle.locked, true);
 });
 
+test('buyUpgrade dispatch preserves legacy ctrl fallback when heldCtrl is omitted', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  const battle = runtime.context.game.upgrades.Battle;
+  const calls = [];
+
+  battle.locked = 0;
+  runtime.context.buyUpgrade = (...args) => {
+    calls.push(args);
+    return true;
+  };
+
+  assert.equal(runtime.dispatch({ type: 'buyUpgrade', name: 'Battle' }), true);
+  assert.equal(runtime.dispatch({ type: 'buyUpgrade', name: 'Battle', heldCtrl: false }), true);
+  assert.equal(runtime.dispatch({ type: 'buyUpgrade', name: 'Battle', heldCtrl: true }), true);
+
+  assert.deepEqual(calls[0], ['Battle', true, true, undefined]);
+  assert.deepEqual(calls[1], ['Battle', true, true, false]);
+  assert.deepEqual(calls[2], ['Battle', true, true, true]);
+});
+
 test('buyUpgrade reports false without mutating when resources are insufficient', () => {
   const runtime = createTrimpsRuntime({ rootDir });
   const battle = runtime.context.game.upgrades.Battle;

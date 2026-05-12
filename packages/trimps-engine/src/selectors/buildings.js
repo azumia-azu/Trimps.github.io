@@ -16,6 +16,7 @@ function getBuildingSnapshot(game, name, building) {
 
   addNumberField(snapshot, building, 'craftTime');
   snapshot.canAfford = name !== 'Hub'
+    && !getOwnDataValue(game.global, 'clearingBuildingQueue')
     && (name !== 'Antenna' || canAffordAntenna(game, snapshot.purchased))
     && canAffordCost(game, building, {
       buyAmt: game.global && game.global.buyAmt,

@@ -41,6 +41,23 @@ test('derives gather and purchase capabilities from a snapshot', () => {
   assert.equal(capabilities.buyBuilding.Hut.reason, 'locked');
 });
 
+test('capabilities gate building purchases while clearing the build queue', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  runtime.context.game.resources.food.owned = 100;
+  runtime.context.game.resources.wood.owned = 100;
+  runtime.context.game.buildings.Trap.locked = 0;
+
+  const readyCapabilities = runtime.capabilities();
+  assert.deepEqual(readyCapabilities.buyBuilding.Trap, { available: true, reason: null });
+
+  runtime.context.game.global.clearingBuildingQueue = true;
+  const blockedCapabilities = runtime.capabilities();
+  assert.deepEqual(blockedCapabilities.buyBuilding.Trap, {
+    available: false,
+    reason: 'cannot afford',
+  });
+});
+
 test('derives Scientist job capability as unavailable during the Scientist challenge', () => {
   const runtime = createTrimpsRuntime({ rootDir });
   runtime.context.game.global.challengeActive = 'Scientist';
