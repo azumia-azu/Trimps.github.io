@@ -197,6 +197,76 @@ test('buyJob dispatch rejects firing mode without mutating buyAmt or jobs', () =
   assert.equal(runtime.context.game.jobs.Farmer.owned, 10);
 });
 
+test('purchase actions default to the current buyAmt and still honor explicit amounts', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  const calls = [];
+
+  runtime.context.game.global.buyAmt = 7;
+  runtime.context.game.buildings.Trap.locked = 0;
+  runtime.context.game.equipment.Shield.locked = 0;
+  runtime.context.game.jobs.Farmer.locked = 0;
+
+  runtime.context.buyBuilding = (...args) => {
+    calls.push(['buyBuilding', ...args]);
+    return true;
+  };
+  runtime.context.buyEquipment = (...args) => {
+    calls.push(['buyEquipment', ...args]);
+    return true;
+  };
+  runtime.context.buyJob = (...args) => {
+    calls.push(['buyJob', ...args, runtime.context.game.global.buyAmt]);
+    return true;
+  };
+
+  assert.equal(runtime.dispatch({ type: 'buyBuilding', name: 'Trap' }), true);
+  assert.equal(runtime.dispatch({ type: 'buyEquipment', name: 'Shield' }), true);
+  assert.equal(runtime.dispatch({ type: 'buyJob', name: 'Farmer' }), true);
+  assert.equal(runtime.dispatch({ type: 'buyBuilding', name: 'Trap', amount: 3 }), true);
+  assert.equal(runtime.dispatch({ type: 'buyJob', name: 'Farmer', amount: 2 }), true);
+
+  assert.deepEqual(calls[0], ['buyBuilding', 'Trap', true, true, 7]);
+  assert.deepEqual(calls[1], ['buyEquipment', 'Shield', true, true, 7]);
+  assert.deepEqual(calls[2], ['buyJob', 'Farmer', true, true, 7]);
+  assert.deepEqual(calls[3], ['buyBuilding', 'Trap', true, true, 3]);
+  assert.deepEqual(calls[4], ['buyJob', 'Farmer', true, true, 2]);
+  assert.equal(runtime.context.game.global.buyAmt, 7);
+});
+
+test('purchase actions do not pass Max as a forced amount', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  const buildingCalls = [];
+  const equipmentCalls = [];
+  const jobBuyAmts = [];
+
+  runtime.context.game.global.buyAmt = 'Max';
+  runtime.context.game.buildings.Trap.locked = 0;
+  runtime.context.game.equipment.Shield.locked = 0;
+  runtime.context.game.jobs.Farmer.locked = 0;
+
+  runtime.context.buyBuilding = (...args) => {
+    buildingCalls.push(args);
+    return true;
+  };
+  runtime.context.buyEquipment = (...args) => {
+    equipmentCalls.push(args);
+    return true;
+  };
+  runtime.context.buyJob = () => {
+    jobBuyAmts.push(runtime.context.game.global.buyAmt);
+    return true;
+  };
+
+  assert.equal(runtime.dispatch({ type: 'buyBuilding', name: 'Trap' }), true);
+  assert.equal(runtime.dispatch({ type: 'buyEquipment', name: 'Shield' }), true);
+  assert.equal(runtime.dispatch({ type: 'buyJob', name: 'Farmer' }), true);
+
+  assert.equal(buildingCalls[0].length, 3);
+  assert.equal(equipmentCalls[0].length, 3);
+  assert.equal(jobBuyAmts[0], 'Max');
+  assert.equal(runtime.context.game.global.buyAmt, 'Max');
+});
+
 test('buyUpgrade validates unknown upgrade names', () => {
   const runtime = createTrimpsRuntime({ rootDir });
 

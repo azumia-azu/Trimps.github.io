@@ -50,6 +50,20 @@ function getPriceMultiplier(game, itemType) {
   return 1;
 }
 
+function getLargestFireableWorkerPool(game) {
+  const jobs = game.jobs || {};
+  return ['Farmer', 'Lumberjack', 'Miner'].reduce((largest, jobName) => {
+    const owned = toNumber(getOwnDataValue(jobs[jobName], 'owned'), 0);
+    return owned > largest ? owned : largest;
+  }, 0);
+}
+
+function canAutoFireForJob(game, job) {
+  const menu = game.options && game.options.menu;
+  const fireForJobs = menu && menu.fireForJobs;
+  return Boolean(getOwnDataValue(fireForJobs, 'enabled')) && Boolean(getOwnDataValue(job, 'allowAutoFire'));
+}
+
 function canAffordCost(game, item, options = {}) {
   if (!item || item.locked) return false;
   const costs = item.cost && (item.cost.resources || item.cost);
@@ -74,12 +88,17 @@ function canAffordJob(game, job, buyAmt) {
   const max = toNumber(getOwnDataValue(job, 'max'), Infinity);
   const currentOwned = toNumber(getOwnDataValue(job, 'owned'), 0);
   if (currentOwned + amount > max) return false;
-  return owned - employed >= amount;
+
+  const freeTrimps = owned - employed;
+  const fireableWorkers = canAutoFireForJob(game, job) ? getLargestFireableWorkerPool(game) : 0;
+  return freeTrimps + fireableWorkers >= amount;
 }
 
 module.exports = {
   canAffordCost,
   canAffordJob,
+  canAutoFireForJob,
+  getLargestFireableWorkerPool,
   getCostAmount,
   getPerkLevel,
   normalizePurchaseAmount,

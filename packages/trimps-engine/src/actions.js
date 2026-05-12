@@ -100,6 +100,15 @@ function normalizeBuyAmount(value) {
   return normalized;
 }
 
+function resolvePurchaseAmount(context, explicitAmount) {
+  if (typeof explicitAmount !== 'undefined' && explicitAmount !== null) {
+    return normalizePositiveInteger(explicitAmount);
+  }
+
+  const buyAmt = getLegacyGlobal(context).buyAmt;
+  return buyAmt === 'Max' ? 'Max' : normalizePositiveInteger(buyAmt);
+}
+
 function lookupExactTarget(context, collectionName, targetName) {
   if (typeof targetName !== 'string' || targetName.length === 0) {
     throw new Error(`${collectionName} action requires an exact target name.`);
@@ -132,7 +141,7 @@ function getValidatedPurchase(context, action, actionType) {
   assertUnlocked(config.collection, targetName, target);
 
   return {
-    amount: normalizePositiveInteger(action.amount),
+    amount: resolvePurchaseAmount(context, action.amount),
     targetName,
   };
 }
@@ -313,11 +322,15 @@ function dispatchLegacyAction(context, runtime, action) {
     }
     case 'buyBuilding': {
       const purchase = getValidatedPurchase(context, action, 'buyBuilding');
-      return context.buyBuilding(purchase.targetName, true, true, purchase.amount);
+      return purchase.amount === 'Max'
+        ? context.buyBuilding(purchase.targetName, true, true)
+        : context.buyBuilding(purchase.targetName, true, true, purchase.amount);
     }
     case 'buyEquipment': {
       const purchase = getValidatedPurchase(context, action, 'buyEquipment');
-      return context.buyEquipment(purchase.targetName, true, true, purchase.amount);
+      return purchase.amount === 'Max'
+        ? context.buyEquipment(purchase.targetName, true, true)
+        : context.buyEquipment(purchase.targetName, true, true, purchase.amount);
     }
     case 'buyJob': {
       const purchase = getValidatedPurchase(context, action, 'buyJob');

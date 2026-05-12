@@ -58,6 +58,54 @@ test('derives Scientist job capability as unavailable during the Scientist chall
   assert.deepEqual(capabilities.buyJob.Scientist, { available: false, reason: 'cannot afford' });
 });
 
+test('auto-fire jobs stay affordable when workers can be fired for workspaces', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  runtime.context.game.options.menu.fireForJobs.enabled = true;
+  runtime.context.game.jobs.Farmer.owned = 4;
+  runtime.context.game.jobs.Trainer.owned = 6;
+  runtime.context.game.jobs.Trainer.locked = 0;
+  runtime.context.game.global.buyAmt = 4;
+  runtime.context.game.resources.food.owned = 1000000;
+  runtime.context.game.resources.wood.owned = 1000000;
+  runtime.context.game.resources.metal.owned = 1000000;
+  runtime.context.game.resources.science.owned = 1000000;
+  runtime.context.game.resources.trimps.owned = 10;
+
+  const snapshot = runtime.snapshot();
+  const capabilities = getActionCapabilities(snapshot);
+  const trainer = snapshot.jobs.find((job) => job.name === 'Trainer');
+
+  assert.equal(runtime.context.game.resources.trimps.employed, 10);
+  assert.equal(trainer.canAfford, true);
+  assert.deepEqual(capabilities.buyJob.Trainer, { available: true, reason: null });
+});
+
+test('auto-fire jobs require one worker pool large enough for legacy freeWorkspace', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  runtime.context.game.options.menu.fireForJobs.enabled = true;
+  runtime.context.game.jobs.Farmer.owned = 1;
+  runtime.context.game.jobs.Lumberjack.owned = 1;
+  runtime.context.game.jobs.Miner.owned = 1;
+  runtime.context.game.jobs.Trainer.owned = 7;
+  runtime.context.game.jobs.Trainer.locked = 0;
+  runtime.context.game.global.buyAmt = 3;
+  runtime.context.game.resources.food.owned = 1000000;
+  runtime.context.game.resources.wood.owned = 1000000;
+  runtime.context.game.resources.metal.owned = 1000000;
+  runtime.context.game.resources.science.owned = 1000000;
+  runtime.context.game.resources.trimps.owned = 10;
+  runtime.context.game.resources.trimps.employed = 10;
+
+  const snapshot = runtime.snapshot();
+  const capabilities = getActionCapabilities(snapshot);
+  const trainer = snapshot.jobs.find((job) => job.name === 'Trainer');
+
+  assert.equal(trainer.canAfford, false);
+  assert.deepEqual(capabilities.buyJob.Trainer, { available: false, reason: 'cannot afford' });
+});
+
 test('runtime exposes current action capabilities', () => {
   const runtime = createTrimpsRuntime({ rootDir });
   const capabilities = runtime.capabilities();
