@@ -98,6 +98,22 @@ test('auto-fire jobs stay affordable when workers can be fired for workspaces', 
   assert.deepEqual(capabilities.buyJob.Trainer, { available: true, reason: null });
 });
 
+test('job capabilities stay available for worker-limited partial hires', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  runtime.context.game.jobs.Farmer.locked = 0;
+  runtime.context.game.global.buyAmt = 10;
+  runtime.context.game.resources.food.owned = 25;
+  runtime.context.game.resources.trimps.owned = 5;
+
+  const snapshot = runtime.snapshot();
+  const capabilities = getActionCapabilities(snapshot);
+  const farmer = snapshot.jobs.find((job) => job.name === 'Farmer');
+
+  assert.equal(farmer.canAfford, true);
+  assert.deepEqual(capabilities.buyJob.Farmer, { available: true, reason: null });
+});
+
 test('auto-fire jobs require one worker pool large enough for legacy freeWorkspace', () => {
   const runtime = createTrimpsRuntime({ rootDir });
 

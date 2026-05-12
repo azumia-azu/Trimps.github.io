@@ -241,6 +241,21 @@ test('snapshot job affordability reads computed employed trimps', () => {
   assert.equal(farmer.canAfford, false);
 });
 
+test('snapshot job affordability allows max-limited partial hires', () => {
+  const runtime = createRuntime();
+  runtime.context.game.jobs.Farmer.locked = 0;
+  runtime.context.game.jobs.Farmer.owned = 9;
+  runtime.context.game.jobs.Farmer.max = 10;
+  runtime.context.game.global.buyAmt = 10;
+  runtime.context.game.resources.trimps.owned = 10;
+  runtime.context.game.resources.food.owned = 5;
+
+  const snapshot = runtime.snapshot();
+  const farmer = snapshot.jobs.find((job) => job.name === 'Farmer');
+
+  assert.equal(farmer.canAfford, true);
+});
+
 test('snapshot Trappapalooza Coordination affordability reads computed employed trimps', () => {
   const runtime = createRuntime();
   const coordination = runtime.context.game.upgrades.Coordination;

@@ -80,18 +80,30 @@ function canAffordCost(game, item, options = {}) {
 }
 
 function canAffordJob(game, job, buyAmt) {
-  if (!canAffordCost(game, job, { buyAmt, countKey: 'owned' })) return false;
-  const amount = normalizePurchaseAmount(buyAmt);
+  let amount = normalizePurchaseAmount(buyAmt);
   const trimps = game.resources && game.resources.trimps;
   const owned = toNumber(getOwnDataValue(trimps, 'owned'), 0);
   const employed = toNumber(getValue(trimps, 'employed'), 0);
   const max = toNumber(getOwnDataValue(job, 'max'), Infinity);
   const currentOwned = toNumber(getOwnDataValue(job, 'owned'), 0);
-  if (currentOwned + amount > max) return false;
+  const remainingJobs = max - currentOwned;
+  if (remainingJobs <= 0) return false;
+  amount = Math.min(amount, remainingJobs);
 
   const freeTrimps = owned - employed;
   const fireableWorkers = canAutoFireForJob(game, job) ? getLargestFireableWorkerPool(game) : 0;
-  return freeTrimps + fireableWorkers >= amount;
+  if (fireableWorkers > 0) {
+    if (freeTrimps + fireableWorkers < amount) return false;
+  } else {
+    amount = Math.min(amount, freeTrimps);
+  }
+
+  const workspaces = toNumber(getValue(game, 'workspaces'), Infinity);
+  if (fireableWorkers === 0 && Number.isFinite(workspaces) && workspaces >= 0) {
+    amount = Math.min(amount, workspaces);
+  }
+
+  return amount > 0 && canAffordCost(game, job, { buyAmt: amount, countKey: 'owned' });
 }
 
 module.exports = {
