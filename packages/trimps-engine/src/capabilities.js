@@ -22,7 +22,9 @@ function keyedCapabilities(items, options = {}) {
     if (item && item.name) {
       capabilities[item.name] = options.pauseGame
         ? { available: false, reason: 'game paused' }
-        : itemCapability(item);
+        : options.disabledReason
+          ? { available: false, reason: options.disabledReason }
+          : itemCapability(item);
     }
     return capabilities;
   }, {});
@@ -81,12 +83,16 @@ function getRunMapCapability(snapshot) {
 function getActionCapabilities(snapshot) {
   const safeSnapshot = snapshot || {};
   const pauseOptions = { pauseGame: Boolean(safeSnapshot.pauseGame) };
+  const jobOptions = {
+    pauseGame: Boolean(safeSnapshot.pauseGame),
+    disabledReason: safeSnapshot.firing ? 'firing mode enabled' : null,
+  };
   return {
     load: { available: true, reason: null },
     save: { available: true, reason: null },
     gather: getGatherCapabilities(safeSnapshot),
     buyBuilding: keyedCapabilities(safeSnapshot.buildings, pauseOptions),
-    buyJob: keyedCapabilities(safeSnapshot.jobs, pauseOptions),
+    buyJob: keyedCapabilities(safeSnapshot.jobs, jobOptions),
     buyEquipment: keyedCapabilities(safeSnapshot.equipment, pauseOptions),
     buyUpgrade: keyedCapabilities(safeSnapshot.upgrades, pauseOptions),
     fight: getFightCapability(safeSnapshot),

@@ -106,6 +106,47 @@ test('auto-fire jobs require one worker pool large enough for legacy freeWorkspa
   assert.deepEqual(capabilities.buyJob.Trainer, { available: false, reason: 'cannot afford' });
 });
 
+test('capabilities mark buyJob unavailable while firing mode is enabled', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+
+  runtime.context.game.jobs.Farmer.locked = 0;
+  runtime.context.game.resources.food.owned = 1000000;
+  runtime.context.game.resources.trimps.owned = 100;
+
+  const readyCapabilities = runtime.capabilities();
+  assert.deepEqual(readyCapabilities.buyJob.Farmer, { available: true, reason: null });
+
+  runtime.context.game.global.firing = true;
+  const firingSnapshot = runtime.snapshot();
+  const firingCapabilities = getActionCapabilities(firingSnapshot);
+
+  assert.equal(firingSnapshot.firing, true);
+  assert.deepEqual(firingCapabilities.buyJob.Farmer, {
+    available: false,
+    reason: 'firing mode enabled',
+  });
+});
+
+test('capabilities gate Antenna purchases by highest radon zone threshold', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  runtime.context.game.buildings.Antenna.locked = 0;
+  runtime.context.game.buildings.Antenna.purchased = 0;
+  runtime.context.game.resources.metal.owned = 1e31;
+
+  runtime.context.game.global.highestRadonLevelCleared = 100;
+  const blockedCapabilities = runtime.capabilities();
+
+  assert.deepEqual(blockedCapabilities.buyBuilding.Antenna, {
+    available: false,
+    reason: 'cannot afford',
+  });
+
+  runtime.context.game.global.highestRadonLevelCleared = 105;
+  const readyCapabilities = runtime.capabilities();
+
+  assert.deepEqual(readyCapabilities.buyBuilding.Antenna, { available: true, reason: null });
+});
+
 test('runtime exposes current action capabilities', () => {
   const runtime = createTrimpsRuntime({ rootDir });
   const capabilities = runtime.capabilities();

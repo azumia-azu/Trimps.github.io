@@ -1,6 +1,11 @@
 const { canAffordCost, canAffordJob } = require('./affordability');
 const { addNumberField, addStringField, getItemEntries, getOwnDataValue, toNumber } = require('./helpers');
 
+function canAffordAntenna(game, purchased) {
+  const highestRadonLevelCleared = toNumber(getOwnDataValue(game.global, 'highestRadonLevelCleared'), 0);
+  return purchased + 1 <= Math.floor((highestRadonLevelCleared - 100) / 5);
+}
+
 function getBuildingSnapshot(game, name, building) {
   const snapshot = {
     name,
@@ -10,11 +15,13 @@ function getBuildingSnapshot(game, name, building) {
   };
 
   addNumberField(snapshot, building, 'craftTime');
-  snapshot.canAfford = name !== 'Hub' && canAffordCost(game, building, {
-    buyAmt: game.global && game.global.buyAmt,
-    countKey: 'purchased',
-    itemType: 'building',
-  });
+  snapshot.canAfford = name !== 'Hub'
+    && (name !== 'Antenna' || canAffordAntenna(game, snapshot.purchased))
+    && canAffordCost(game, building, {
+      buyAmt: game.global && game.global.buyAmt,
+      countKey: 'purchased',
+      itemType: 'building',
+    });
   return snapshot;
 }
 
@@ -80,6 +87,7 @@ function getPurchasableSnapshots(game) {
 }
 
 module.exports = {
+  canAffordAntenna,
   getBuildQueueSnapshot,
   getBuildingSnapshot,
   getEquipmentSnapshot,

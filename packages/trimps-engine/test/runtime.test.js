@@ -28,6 +28,7 @@ function getGoldenSnapshotShape(snapshot) {
     mode: snapshot.mode,
     mapsActive: snapshot.mapsActive,
     fighting: snapshot.fighting,
+    firing: snapshot.firing,
     pauseFight: snapshot.pauseFight,
     pauseGame: snapshot.pauseGame,
     challenge: snapshot.challenge,
@@ -59,6 +60,7 @@ test('snapshot includes interaction state without exposing mutable game state', 
   runtime.context.game.global.playerGathering = 'wood';
   runtime.context.game.global.buyAmt = 10;
   runtime.context.game.global.autoBattle = true;
+  runtime.context.game.global.firing = true;
   runtime.context.game.global.mapsUnlocked = true;
   runtime.context.game.global.preMapsActive = true;
   runtime.context.game.global.buildingsQueue = ['Trap.2'];
@@ -73,6 +75,7 @@ test('snapshot includes interaction state without exposing mutable game state', 
   assert.equal(snapshot.playerGathering, 'wood');
   assert.equal(snapshot.buyAmt, 10);
   assert.equal(snapshot.autoFight, true);
+  assert.equal(snapshot.firing, true);
   assert.equal(snapshot.mapsUnlocked, true);
   assert.equal(snapshot.preMapsActive, true);
   assert.deepEqual(snapshot.buildQueue, [{ item: 'Trap', remaining: 2, raw: 'Trap.2' }]);
@@ -121,6 +124,25 @@ test('snapshot affordability excludes non-manual Hub building purchases', () => 
   const hub = snapshot.buildings.find((building) => building.name === 'Hub');
 
   assert.equal(hub.canAfford, false);
+});
+
+test('snapshot affordability gates Antenna by highest radon zone threshold', () => {
+  const runtime = createRuntime();
+  runtime.context.game.buildings.Antenna.locked = 0;
+  runtime.context.game.buildings.Antenna.purchased = 0;
+  runtime.context.game.resources.metal.owned = 1e31;
+
+  runtime.context.game.global.highestRadonLevelCleared = 100;
+  const blockedSnapshot = runtime.snapshot();
+  const blockedAntenna = blockedSnapshot.buildings.find((building) => building.name === 'Antenna');
+
+  assert.equal(blockedAntenna.canAfford, false);
+
+  runtime.context.game.global.highestRadonLevelCleared = 105;
+  const readySnapshot = runtime.snapshot();
+  const readyAntenna = readySnapshot.buildings.find((building) => building.name === 'Antenna');
+
+  assert.equal(readyAntenna.canAfford, true);
 });
 
 test('snapshot affordability excludes non-manual Amalgamator job purchases', () => {

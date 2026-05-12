@@ -51,6 +51,7 @@ function createSnapshot(game) {
     pauseGame: Boolean(pauseGameOption && pauseGameOption.enabled),
     mapsActive: Boolean(globalState.mapsActive),
     fighting: Boolean(globalState.fighting),
+    firing: Boolean(globalState.firing),
     mode: getMode(globalState),
     challenge: toStringOrNull(getOwnDataValue(globalState, 'challengeActive')),
     selectedChallenge: toStringOrNull(getOwnDataValue(globalState, 'selectedChallenge')),

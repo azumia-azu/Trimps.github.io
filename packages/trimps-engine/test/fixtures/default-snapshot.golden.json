@@ -5,6 +5,7 @@
   "mode": "world",
   "mapsActive": false,
   "fighting": false,
+  "firing": false,
   "pauseFight": true,
   "pauseGame": false,
   "challenge": null,
