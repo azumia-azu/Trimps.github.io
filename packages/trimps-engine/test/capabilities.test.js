@@ -180,6 +180,20 @@ test('capabilities gate Antenna purchases by highest radon zone threshold', () =
   assert.deepEqual(readyCapabilities.buyBuilding.Antenna, { available: true, reason: null });
 });
 
+test('capabilities gate Archaeology relic upgrades at point cap', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  runtime.context.game.upgrades.attackRelic.locked = 0;
+  runtime.context.game.challenges.Archaeology.points.attack = 50;
+  runtime.context.game.resources.science.owned = 1e9;
+
+  const capabilities = runtime.capabilities();
+
+  assert.deepEqual(capabilities.buyUpgrade.attackRelic, {
+    available: false,
+    reason: 'cannot afford',
+  });
+});
+
 test('runtime exposes current action capabilities', () => {
   const runtime = createTrimpsRuntime({ rootDir });
   const capabilities = runtime.capabilities();

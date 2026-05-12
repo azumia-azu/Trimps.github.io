@@ -28,11 +28,20 @@ function passesSpecialFilter(upgrade) {
   return Boolean(upgrade.specialFilter());
 }
 
+function passesRelicPointCap(game, upgrade) {
+  if (!upgrade || !getOwnDataValue(upgrade, 'isRelic')) return true;
+  const archaeology = game.challenges && game.challenges.Archaeology;
+  if (!archaeology || typeof archaeology.getPoints !== 'function') return true;
+  return toNumber(archaeology.getPoints(getOwnDataValue(upgrade, 'relic')), 0) < 50;
+}
+
 function getUpgradeSnapshot(game, name, upgrade) {
   const locked = Boolean(toNumber(getOwnDataValue(upgrade, 'locked'), 0));
   const done = Boolean(toNumber(getOwnDataValue(upgrade, 'done'), 0));
   const allowed = toNumber(getOwnDataValue(upgrade, 'allowed'), 0);
-  let canAfford = passesSpecialFilter(upgrade) && canAffordCost(game, upgrade, { buyAmt: 1, countKey: 'done' });
+  let canAfford = passesSpecialFilter(upgrade)
+    && passesRelicPointCap(game, upgrade)
+    && canAffordCost(game, upgrade, { buyAmt: 1, countKey: 'done' });
   if (name === 'Coordination') canAfford = canAfford && canAffordCoordinationTrimps(game);
   return {
     name,
@@ -52,5 +61,6 @@ module.exports = {
   canAffordCoordinationTrimps,
   getUpgradeSnapshot,
   getUpgradesSnapshot,
+  passesRelicPointCap,
   passesSpecialFilter,
 };

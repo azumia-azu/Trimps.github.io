@@ -226,6 +226,26 @@ test('snapshot upgrade affordability respects legacy special filters', () => {
   assert.equal(readyShieldblock.canAfford, true);
 });
 
+test('snapshot upgrade affordability gates Archaeology relics at point cap', () => {
+  const runtime = createRuntime();
+  const attackRelic = runtime.context.game.upgrades.attackRelic;
+  attackRelic.locked = 0;
+  runtime.context.game.challenges.Archaeology.points.attack = 50;
+  runtime.context.game.resources.science.owned = 1e9;
+
+  const cappedSnapshot = runtime.snapshot();
+  const cappedRelic = cappedSnapshot.upgrades.find((upgrade) => upgrade.name === 'attackRelic');
+
+  assert.equal(cappedRelic.canAfford, false);
+
+  runtime.context.game.challenges.Archaeology.points.attack = 49;
+
+  const readySnapshot = runtime.snapshot();
+  const readyRelic = readySnapshot.upgrades.find((upgrade) => upgrade.name === 'attackRelic');
+
+  assert.equal(readyRelic.canAfford, true);
+});
+
 test('snapshot job affordability reads computed employed trimps', () => {
   const runtime = createRuntime();
   runtime.context.game.jobs.Farmer.locked = 0;
