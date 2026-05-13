@@ -114,7 +114,7 @@ function Panel({ title, children, ...props }: { title: string; children?: unknow
       marginBottom={SPACE.xs}
       {...props}
     >
-      <text fg={THEME.text} backgroundColor={THEME.panelAlt} content={title} />
+      <text fg={THEME.text} bg={THEME.panelAlt} content={title} />
       {children}
     </box>
   );
@@ -128,7 +128,7 @@ function PillRow({ items, selected }: { items: string[]; selected: string }) {
           key={item}
           content={` ${item} `}
           fg={item === selected ? THEME.badgeText : THEME.text}
-          backgroundColor={item === selected ? THEME.badge : THEME.panelAlt}
+          bg={item === selected ? THEME.badge : THEME.panelAlt}
           marginRight={SPACE.xs}
         />
       ))}
@@ -146,7 +146,7 @@ function Header({ snapshot }: SnapshotProps) {
         <text fg={challenge === 'None' ? THEME.muted : THEME.warning} content={`Challenge: ${challenge}`} />
       </box>
       <box backgroundColor={THEME.warning} paddingX={SPACE.xs}>
-        <text fg={THEME.text} backgroundColor={THEME.warning} content="Headless read-only dashboard. Web DOM, window, and localStorage are not used by this TUI." />
+        <text fg={THEME.text} bg={THEME.warning} content="Headless read-only dashboard. Web DOM, window, and localStorage are not used by this TUI." />
       </box>
     </box>
   );
@@ -157,7 +157,7 @@ function ResourceCard({ label, resource, actionLabel }: { label: string; resourc
     <Panel title={label} flexGrow={1} minHeight={5}>
       {line(`${formatNumber(resource.owned)}${resource.max === null || typeof resource.max === 'undefined' ? '' : ` / ${formatNumber(resource.max)}`}`)}
       <box flexDirection="row">
-        <text content={` ${formatPercent(resource)} `} fg={THEME.text} backgroundColor={THEME.primary} marginRight={SPACE.xs} />
+        <text content={` ${formatPercent(resource)} `} fg={THEME.text} bg={THEME.primary} marginRight={SPACE.xs} />
         <text content={actionLabel || '+/sec unavailable'} fg={THEME.muted} />
       </box>
     </Panel>
@@ -190,7 +190,7 @@ function TrimpsPanel({ snapshot }: SnapshotProps) {
   return (
     <Panel title="Trimps" flexGrow={1} minWidth={20}>
       {line(`${formatNumber(trimps.owned)} / ${formatNumber(trimps.max)}`)}
-      <text content={` ${formatPercent(trimps)} `} fg={THEME.text} backgroundColor={THEME.primary} />
+      <text content={` ${formatPercent(trimps)} `} fg={THEME.text} bg={THEME.primary} />
       {line(`Working: ${formatNumber(trimps.working)}`, THEME.muted)}
       {line(`Soldiers: ${formatNumber(trimps.soldiers)} / ${formatNumber(trimps.maxSoldiers)}`, THEME.muted)}
       {line(`Potency: ${formatNumber(trimps.potency)}`, THEME.muted)}
@@ -259,9 +259,9 @@ function CombatPanel({ snapshot }: SnapshotProps) {
 function HelpBar() {
   return (
     <box backgroundColor={THEME.panelAlt} paddingX={SPACE.xs} justifyContent="space-between" flexDirection="row">
-      <text content="Ctrl+C quit" fg={THEME.text} backgroundColor={THEME.panelAlt} />
-      <text content="Read-only first-stage dashboard" fg={THEME.muted} backgroundColor={THEME.panelAlt} />
-      <text content="Actions will be dispatched through runtime ports in later stages" fg={THEME.muted} backgroundColor={THEME.panelAlt} />
+      <text content="Ctrl+C quit" fg={THEME.text} bg={THEME.panelAlt} />
+      <text content="Read-only first-stage dashboard" fg={THEME.muted} bg={THEME.panelAlt} />
+      <text content="Actions will be dispatched through runtime ports in later stages" fg={THEME.muted} bg={THEME.panelAlt} />
     </box>
   );
 }
