@@ -91,7 +91,7 @@ export async function main(argv: string[]): Promise<number> {
   return 0;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main) {
   main(process.argv.slice(2)).then((exitCode) => {
     process.exitCode = exitCode;
   }).catch((error: unknown) => {
