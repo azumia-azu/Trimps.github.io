@@ -68,7 +68,8 @@ export type GameSnapshot = {
 };
 
 export type GameAction =
-  | { type: 'load'; saveString: string }
+  | { type: 'load'; payload: string }
+  | { type: 'load'; save: string }
   | { type: 'save' }
   | { type: 'gather'; resource: 'food' | 'wood' | 'metal' | 'science' | 'buildings' | 'trimps' | string }
   | { type: 'buyBuilding'; name: string; amount?: BuyAmount }
@@ -93,9 +94,9 @@ export type Command = {
 };
 
 export type TrimpsRuntime = {
-  loadExport(saveString: string): void;
+  loadExport(saveString: string): boolean;
   exportSave(): string;
-  tick(deltaMs: number): void;
+  tick(deltaMs: number): number;
   snapshot(): GameSnapshot;
   capabilities(): Record<string, unknown>;
   dispatch(action: GameAction): unknown;
