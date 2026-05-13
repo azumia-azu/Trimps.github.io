@@ -55,12 +55,60 @@ Experimental actions bridge legacy behavior with more preconditions and sharper 
 - `buyBuilding`
 - `buyJob`
 - `buyEquipment`
+- `buyUpgrade`
 - `fight`
+- `pauseFight`
 - `runMap`
+- `setBuyAmount`
+- `toggleAutoFight`
 
 `src/actions.js` exports `STABLE_ACTION_TYPES`, `EXPERIMENTAL_ACTION_TYPES`, `SUPPORTED_ACTION_TYPES`, and `ACTION_METADATA` so CLI/TUI code and tests can reason about action status without duplicating lists.
 
 `runtime.capabilities()` returns the current snapshot-aware availability for actions. Use `ACTION_METADATA` for static action positioning, such as stable versus experimental, and use `runtime.capabilities()` before enabling user commands that depend on current game state.
+
+## Commands
+
+`src/commands.js` exports `createCommandList(snapshot, capabilities, options)` as the shared command derivation layer for adapters. Commands are derived from a read-only snapshot, current action capabilities, and `ACTION_METADATA`; they do not call legacy functions directly and do not depend on OpenTUI, React, Bun, DOM APIs, or `localStorage`.
+
+Use commands when binding keyboard shortcuts, rendering an action panel, or building a command palette. UI adapters should consume `command.id`, `command.key`, `command.label`, and `command.disabledReason`, then pass `command.action` to `runtime.dispatch(command.action)` when `command.enabled` is true.
+
+```js
+const { createCommandList, createTrimpsRuntime } = require('@trimps/engine');
+
+const runtime = createTrimpsRuntime();
+const snapshot = runtime.snapshot();
+const capabilities = runtime.capabilities();
+
+const commands = createCommandList(snapshot, capabilities, {
+  keymap: {
+    'gather.food': 'f',
+    'gather.wood': 'w',
+    'setBuyAmount.max': 'm',
+  },
+});
+
+const command = commands.find((candidate) => candidate.id === 'gather.food');
+if (command && command.enabled) {
+  runtime.dispatch(command.action);
+}
+```
+
+Command objects have this shape:
+
+```js
+{
+  id: 'gather.food',
+  label: 'Gather Food',
+  description: 'Switch gathering to food.',
+  key: 'f',
+  action: { type: 'gather', resource: 'food' },
+  enabled: true,
+  disabledReason: null,
+  stability: 'stable',
+}
+```
+
+The first command batch covers gather resource switching, buy amount selection, `toggleAutoFight`, `pauseFight`, and `save`. Keep adapter-specific key event parsing outside the engine; only pure command derivation belongs here.
 
 ## Adding Actions
 
