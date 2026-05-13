@@ -74,6 +74,9 @@ export async function runDashboard(options: CliOptions): Promise<void> {
       onSnapshot(snapshot: GameSnapshot) {
         return renderer.update(snapshot);
       },
+      shouldContinue() {
+        return !renderer.isClosed();
+      },
     });
   } finally {
     await renderer.close();
