@@ -34,6 +34,7 @@ async function runRuntimeLoop(options = {}) {
   const {
     runtime,
     onSnapshot,
+    shouldContinue,
   } = options;
 
   if (!runtime || typeof runtime.tick !== 'function' || typeof runtime.snapshot !== 'function') {
@@ -45,30 +46,35 @@ async function runRuntimeLoop(options = {}) {
     typeof options.intervalMs === 'undefined' ? 1000 : options.intervalMs,
     'intervalMs',
   );
-  const frames = assertNonNegativeInteger(
+  const maxFrames = assertNonNegativeInteger(
     typeof options.frames === 'undefined' ? 0 : options.frames,
     'frames',
   );
+  const continuous = maxFrames === 0;
   const initialDeltaMs = assertNonNegativeFinite(
     typeof options.initialDeltaMs === 'undefined' ? 0 : options.initialDeltaMs,
     'initialDeltaMs',
   );
 
-  if (frames === 0 && intervalMs === 0) {
+  if (continuous && intervalMs === 0) {
     throw new Error('intervalMs must be greater than 0 when frames is 0.');
   }
 
-  if (frames === 0) {
-    await renderFrame(runtime, initialDeltaMs, onSnapshot);
+  if (continuous) {
+    let frameIndex = 0;
+    let snapshot = await renderFrame(runtime, initialDeltaMs, onSnapshot);
+    if (shouldContinue && !await shouldContinue(snapshot, frameIndex)) return;
     while (true) {
       await delay(clockPort, intervalMs);
-      await renderFrame(runtime, intervalMs, onSnapshot);
+      frameIndex += 1;
+      snapshot = await renderFrame(runtime, intervalMs, onSnapshot);
+      if (shouldContinue && !await shouldContinue(snapshot, frameIndex)) return;
     }
   }
 
-  for (let frame = 0; frame < frames; frame += 1) {
+  for (let frame = 0; frame < maxFrames; frame += 1) {
     await renderFrame(runtime, frame === 0 ? initialDeltaMs : intervalMs, onSnapshot);
-    if (frame < frames - 1) await delay(clockPort, intervalMs);
+    if (frame < maxFrames - 1) await delay(clockPort, intervalMs);
   }
 }
 

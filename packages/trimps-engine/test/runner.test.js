@@ -81,6 +81,56 @@ test('runtime runner can be driven by manual clock timers', async () => {
   assert.deepEqual(frames, [0, 250, 250]);
 });
 
+test('runtime runner can stop continuous mode through shouldContinue', async () => {
+  const runtime = createRuntimeStub();
+  const delays = [];
+  const shouldContinueCalls = [];
+  const clockPort = {
+    setTimeout(callback, delayMs) {
+      delays.push(delayMs);
+      callback();
+      return delays.length;
+    },
+    clearTimeout() {},
+  };
+
+  await runRuntimeLoop({
+    runtime,
+    clockPort,
+    initialDeltaMs: 1000,
+    intervalMs: 250,
+    frames: 0,
+    shouldContinue(snapshot, frameIndex) {
+      shouldContinueCalls.push({ frameIndex, latestTick: snapshot.ticks[snapshot.ticks.length - 1] });
+      return frameIndex < 2;
+    },
+  });
+
+  assert.deepEqual(runtime.ticks, [1000, 250, 250]);
+  assert.deepEqual(delays, [250, 250]);
+  assert.deepEqual(shouldContinueCalls, [
+    { frameIndex: 0, latestTick: 1000 },
+    { frameIndex: 1, latestTick: 250 },
+    { frameIndex: 2, latestTick: 250 },
+  ]);
+});
+
+test('runtime runner rejects when onSnapshot throws', async () => {
+  const runtime = createRuntimeStub();
+
+  await assert.rejects(
+    () => runRuntimeLoop({
+      runtime,
+      frames: 1,
+      onSnapshot() {
+        throw new Error('render failed');
+      },
+    }),
+    /render failed/,
+  );
+  assert.deepEqual(runtime.ticks, [0]);
+});
+
 test('runtime runner validates loop options', async () => {
   await assert.rejects(
     () => runRuntimeLoop({ runtime: createRuntimeStub(), intervalMs: -1 }),
