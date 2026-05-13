@@ -1,29 +1,36 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
-const path = require('path');
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { loadEngine } from './engine-loader';
+import { createOpenTuiRenderer } from './opentui-renderer';
+import type { GameSnapshot } from './types/trimps-engine';
 
-function loadEngine() {
-  try {
-    return require('@trimps/engine');
-  } catch (error) {
-    if (!error || error.code !== 'MODULE_NOT_FOUND') throw error;
-    return require('../../trimps-engine/src/headless-runtime');
-  }
-}
+type CliOptions = {
+  command?: string;
+  seconds: number;
+  intervalMs: number;
+  frames: number;
+  savePath?: string;
+  help?: boolean;
+};
 
-function usage() {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export function usage(): string {
   return [
     'Usage:',
-    '  bun packages/trimps-tui/src/cli.js run [--save <path>] [--seconds <n>] [--interval <ms>] [--frames <n>]',
+    '  bun packages/trimps-tui/src/cli.ts run [--save <path>] [--seconds <n>] [--interval <ms>] [--frames <n>]',
     '  npm run trimps-tui -- run [--save <path>] [--seconds <n>] [--interval <ms>] [--frames <n>]',
     '',
     'Use --frames 0, the default, to keep the OpenTUI dashboard running until Ctrl+C.',
   ].join('\n');
 }
 
-function parseArgs(argv) {
+export function parseArgs(argv: string[]): CliOptions {
   const [command, ...args] = argv;
-  const options = { command, seconds: 0, intervalMs: 1000, frames: 0 };
+  const options: CliOptions = { command, seconds: 0, intervalMs: 1000, frames: 0 };
   if (command === '--help' || command === '-h') options.help = true;
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -37,17 +44,16 @@ function parseArgs(argv) {
   return options;
 }
 
-function validateOptions(options) {
+function validateOptions(options: CliOptions): void {
   if (!Number.isFinite(options.seconds) || options.seconds < 0) throw new Error('--seconds must be a non-negative number.');
   if (!Number.isSafeInteger(options.intervalMs) || options.intervalMs < 0) throw new Error('--interval must be a non-negative integer.');
   if (!Number.isSafeInteger(options.frames) || options.frames < 0) throw new Error('--frames must be a non-negative integer.');
 }
 
-async function runDashboard(options) {
+export async function runDashboard(options: CliOptions): Promise<void> {
   validateOptions(options);
 
   const { createFileStoragePort, createSystemClockPort, createTrimpsRuntime, runRuntimeLoop } = loadEngine();
-  const { createOpenTuiRenderer } = require('./opentui-renderer');
   const runtime = createTrimpsRuntime({ rootDir: path.resolve(__dirname, '../../..') });
   const fileStorage = createFileStoragePort({ baseDir: process.cwd() });
   if (options.savePath) {
@@ -65,7 +71,7 @@ async function runDashboard(options) {
       initialDeltaMs: deltaMs,
       intervalMs: options.intervalMs,
       frames: options.frames,
-      onSnapshot(snapshot) {
+      onSnapshot(snapshot: GameSnapshot) {
         return renderer.update(snapshot);
       },
     });
@@ -74,7 +80,7 @@ async function runDashboard(options) {
   }
 }
 
-async function main(argv) {
+export async function main(argv: string[]): Promise<number> {
   const options = parseArgs(argv);
   if (options.help || options.command !== 'run') {
     console.log(usage());
@@ -85,18 +91,11 @@ async function main(argv) {
   return 0;
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main(process.argv.slice(2)).then((exitCode) => {
     process.exitCode = exitCode;
-  }).catch((error) => {
-    console.error(error && error.stack ? error.stack : String(error));
+  }).catch((error: unknown) => {
+    console.error(error && typeof error === 'object' && 'stack' in error ? error.stack : String(error));
     process.exitCode = 1;
   });
 }
-
-module.exports = {
-  main,
-  parseArgs,
-  runDashboard,
-  usage,
-};
