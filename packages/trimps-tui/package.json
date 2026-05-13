@@ -1,0 +1,23 @@
+{
+  "name": "@trimps/tui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/cli.js",
+  "bin": {
+    "trimps-tui": "./src/cli.js"
+  },
+  "scripts": {
+    "trimps-tui": "bun src/cli.js",
+    "start": "bun src/cli.js run"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.2.6",
+    "@opentui/react": "^0.2.6",
+    "@trimps/engine": "file:../trimps-engine",
+    "react": "^19.2.6"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

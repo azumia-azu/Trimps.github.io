@@ -1,0 +1,30 @@
+{
+  "name": "@trimps/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/headless-runtime.js",
+  "bin": {
+    "trimps-headless": "./src/cli.js"
+  },
+  "exports": {
+    ".": "./src/headless-runtime.js",
+    "./headless-runtime": "./src/headless-runtime.js",
+    "./actions": "./src/actions.js",
+    "./capabilities": "./src/capabilities.js",
+    "./formatter": "./src/formatter.js",
+    "./ports/clock-port": "./src/ports/clock-port.js",
+    "./ports/platform-port": "./src/ports/platform-port.js",
+    "./ports/storage-port": "./src/ports/storage-port.js",
+    "./runner": "./src/runner.js",
+    "./snapshot": "./src/snapshot.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "trimps-headless": "node src/cli.js",
+    "start": "node src/cli.js run"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
