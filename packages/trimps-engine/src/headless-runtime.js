@@ -1,5 +1,6 @@
 const { LEGACY_SCRIPT_ORDER } = require('./legacy-loader');
 const { cleanExportString, createTrimpsRuntime } = require('./runtime');
+const { createCommandList } = require('./commands');
 const { getActionCapabilities } = require('./capabilities');
 const { formatClock, formatNumber, formatPercent, formatResource } = require('./formatter');
 const { runRuntimeLoop } = require('./runner');
@@ -12,6 +13,7 @@ module.exports = {
   cleanExportString,
   createFileStoragePort,
   createHeadlessPlatformPort,
+  createCommandList,
   createManualClockPort,
   createMemoryStoragePort,
   createSystemClockPort,

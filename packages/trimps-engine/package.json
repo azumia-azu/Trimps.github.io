@@ -12,6 +12,7 @@
     "./headless-runtime": "./src/headless-runtime.js",
     "./actions": "./src/actions.js",
     "./capabilities": "./src/capabilities.js",
+    "./commands": "./src/commands.js",
     "./formatter": "./src/formatter.js",
     "./ports/clock-port": "./src/ports/clock-port.js",
     "./ports/platform-port": "./src/ports/platform-port.js",
