@@ -78,7 +78,7 @@ export type GameAction =
   | { type: 'buyUpgrade'; name: string; amount?: BuyAmount }
   | { type: 'fight' }
   | { type: 'pauseFight'; paused?: boolean }
-  | { type: 'runMap'; id: string | number }
+  | { type: 'runMap'; id: string }
   | { type: 'setBuyAmount'; amount: BuyAmount }
   | { type: 'toggleAutoFight'; enabled?: boolean };
 
