@@ -72,10 +72,10 @@ export type GameAction =
   | { type: 'load'; save: string }
   | { type: 'save' }
   | { type: 'gather'; resource: 'food' | 'wood' | 'metal' | 'science' | 'buildings' | 'trimps' | string }
-  | { type: 'buyBuilding'; name: string; amount?: BuyAmount }
-  | { type: 'buyJob'; name: string; amount?: BuyAmount }
-  | { type: 'buyEquipment'; name: string; amount?: BuyAmount }
-  | { type: 'buyUpgrade'; name: string; amount?: BuyAmount }
+  | { type: 'buyBuilding'; name: string; amount?: number }
+  | { type: 'buyJob'; name: string; amount?: number }
+  | { type: 'buyEquipment'; name: string; amount?: number }
+  | { type: 'buyUpgrade'; name: string; heldCtrl?: boolean }
   | { type: 'fight' }
   | { type: 'pauseFight'; paused?: boolean }
   | { type: 'runMap'; id: string }
