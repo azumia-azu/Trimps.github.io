@@ -194,6 +194,24 @@ test('capabilities gate Archaeology relic upgrades at point cap', () => {
   });
 });
 
+test('capabilities block exhausted unlocked upgrades', () => {
+  const runtime = createTrimpsRuntime({ rootDir });
+  runtime.context.game.upgrades.Shieldblock.locked = 0;
+  runtime.context.game.upgrades.Shieldblock.allowed = 1;
+  runtime.context.game.upgrades.Shieldblock.done = 1;
+  runtime.context.game.equipment.Shield.prestige = 3;
+  runtime.context.game.resources.science.owned = 1e9;
+  runtime.context.game.resources.wood.owned = 1e9;
+  runtime.context.game.resources.metal.owned = 1e9;
+
+  const capabilities = runtime.capabilities();
+
+  assert.deepEqual(capabilities.buyUpgrade.Shieldblock, {
+    available: false,
+    reason: 'cannot afford',
+  });
+});
+
 test('runtime exposes current action capabilities', () => {
   const runtime = createTrimpsRuntime({ rootDir });
   const capabilities = runtime.capabilities();

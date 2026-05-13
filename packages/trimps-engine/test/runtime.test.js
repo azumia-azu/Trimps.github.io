@@ -205,10 +205,31 @@ test('snapshot affordability gates Coordination by trimps send capacity', () => 
   assert.equal(coordinationSnapshot.canAfford, false);
 });
 
+test('snapshot affordability blocks exhausted unlocked upgrades', () => {
+  const runtime = createRuntime();
+  const shieldblock = runtime.context.game.upgrades.Shieldblock;
+  shieldblock.locked = 0;
+  shieldblock.allowed = 1;
+  shieldblock.done = 1;
+  runtime.context.game.equipment.Shield.prestige = 3;
+  runtime.context.game.resources.science.owned = 1e9;
+  runtime.context.game.resources.wood.owned = 1e9;
+  runtime.context.game.resources.metal.owned = 1e9;
+
+  const snapshot = runtime.snapshot();
+  const shieldblockSnapshot = snapshot.upgrades.find((upgrade) => upgrade.name === 'Shieldblock');
+
+  assert.equal(shieldblockSnapshot.unlocked, true);
+  assert.equal(shieldblockSnapshot.done, true);
+  assert.equal(shieldblockSnapshot.canAfford, false);
+});
+
 test('snapshot upgrade affordability respects legacy special filters', () => {
   const runtime = createRuntime();
   const shieldblock = runtime.context.game.upgrades.Shieldblock;
   shieldblock.locked = 0;
+  shieldblock.allowed = 1;
+  shieldblock.done = 0;
   runtime.context.game.equipment.Shield.prestige = 2;
   runtime.context.game.resources.science.owned = 3000;
   runtime.context.game.resources.wood.owned = 10000;

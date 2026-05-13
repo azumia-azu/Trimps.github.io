@@ -37,9 +37,11 @@ function passesRelicPointCap(game, upgrade) {
 
 function getUpgradeSnapshot(game, name, upgrade) {
   const locked = Boolean(toNumber(getOwnDataValue(upgrade, 'locked'), 0));
-  const done = Boolean(toNumber(getOwnDataValue(upgrade, 'done'), 0));
+  const doneCount = toNumber(getOwnDataValue(upgrade, 'done'), 0);
   const allowed = toNumber(getOwnDataValue(upgrade, 'allowed'), 0);
-  let canAfford = passesSpecialFilter(upgrade)
+  const exhausted = allowed !== -1 && doneCount >= allowed;
+  let canAfford = !exhausted
+    && passesSpecialFilter(upgrade)
     && passesRelicPointCap(game, upgrade)
     && canAffordCost(game, upgrade, { buyAmt: 1, countKey: 'done' });
   if (name === 'Coordination') canAfford = canAfford && canAffordCoordinationTrimps(game);
@@ -47,7 +49,7 @@ function getUpgradeSnapshot(game, name, upgrade) {
     name,
     locked,
     unlocked: !locked,
-    done,
+    done: Boolean(doneCount),
     allowed,
     canAfford,
   };
