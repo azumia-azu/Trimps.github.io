@@ -53,7 +53,8 @@ function validateOptions(options: CliOptions): void {
 export async function runDashboard(options: CliOptions): Promise<void> {
   validateOptions(options);
 
-  const { createFileStoragePort, createSystemClockPort, createTrimpsRuntime, runRuntimeLoop } = loadEngine();
+  const { createCommandList, createFileStoragePort, createSystemClockPort, createTrimpsRuntime, runRuntimeLoop } = loadEngine();
+  if (typeof createCommandList !== 'function') throw new Error('@trimps/engine createCommandList() is unavailable.');
   const runtime = createTrimpsRuntime({ rootDir: path.resolve(__dirname, '../../..') });
   const fileStorage = createFileStoragePort({ baseDir: process.cwd() });
   if (options.savePath) {
@@ -61,7 +62,7 @@ export async function runDashboard(options: CliOptions): Promise<void> {
     runtime.loadExport(saveString);
   }
 
-  const renderer = await createOpenTuiRenderer();
+  const renderer = await createOpenTuiRenderer({ runtime, createCommandList });
   const deltaMs = options.seconds * 1000;
 
   try {
