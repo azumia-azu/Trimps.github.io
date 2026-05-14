@@ -10,11 +10,12 @@ type KeyEventInput = {
   sequence?: string;
   raw?: string;
   eventType?: string;
+  repeated?: boolean;
 };
 
 type KeyInput = string | KeyEventInput;
 
-const ACCEPTED_KEY_EVENT_TYPES = new Set(['press', 'repeat', 'keypress']);
+const ACCEPTED_KEY_EVENT_TYPES = new Set(['press', 'keypress']);
 
 function normalizeKeyValue(value: unknown): string | null {
   if (typeof value !== 'string' || value.length === 0) return null;
@@ -28,6 +29,7 @@ export function normalizeKeyInput(input: KeyInput | null | undefined | unknown):
   if (typeof input !== 'object') return null;
   const key = input as KeyEventInput;
   if (key.eventType && !ACCEPTED_KEY_EVENT_TYPES.has(key.eventType)) return null;
+  if (key.repeated) return null;
   if (key.ctrl || key.meta) return null;
   return normalizeKeyValue(key.name) || normalizeKeyValue(key.sequence) || normalizeKeyValue(key.raw);
 }
