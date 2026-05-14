@@ -9,8 +9,8 @@
     "test": "npm --workspace @trimps/engine test",
     "test:engine": "npm --workspace @trimps/engine test",
     "trimps-headless": "npm --workspace @trimps/engine run trimps-headless --",
-    "trimps-tui": "bun --cwd packages/trimps-tui src/cli.js",
-    "trimps-tui:bun": "bun --cwd packages/trimps-tui src/cli.js",
-    "start:tui": "bun --cwd packages/trimps-tui src/cli.js run"
+    "trimps-tui": "bun --cwd packages/trimps-tui src/cli.ts",
+    "trimps-tui:bun": "bun --cwd packages/trimps-tui src/cli.ts",
+    "start:tui": "bun --cwd packages/trimps-tui src/cli.ts run"
   }
 }
