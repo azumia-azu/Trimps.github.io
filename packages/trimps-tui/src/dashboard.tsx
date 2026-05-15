@@ -1,5 +1,5 @@
 import { formatNumber, formatPercent, formatResource } from './engine-loader';
-import type { GameSnapshot, ItemSnapshot, ResourceSnapshot } from './types/trimps-engine';
+import type { Command, GameSnapshot, ItemSnapshot, ResourceSnapshot } from './types/trimps-engine';
 
 export const THEME = Object.freeze({
   background: '#000000',
@@ -36,6 +36,7 @@ const NUM_TABS = ['+1', '+10', '+25', '+100', 'Custom', 'Max'];
 
 type OwnedKey = 'owned' | 'level';
 type SnapshotProps = { snapshot: GameSnapshot };
+type CommandBarProps = { commands?: readonly Command[]; status?: string | null };
 
 const EMPTY_RESOURCE: ResourceSnapshot = { owned: 0, max: null };
 const EMPTY_SNAPSHOT: GameSnapshot = {
@@ -146,7 +147,7 @@ function Header({ snapshot }: SnapshotProps) {
         <text fg={challenge === 'None' ? THEME.muted : THEME.warning} content={`Challenge: ${challenge}`} />
       </box>
       <box backgroundColor={THEME.warning} paddingX={SPACE.xs}>
-        <text fg={THEME.text} bg={THEME.warning} content="Headless read-only dashboard. Web DOM, window, and localStorage are not used by this TUI." />
+        <text fg={THEME.text} bg={THEME.warning} content="Headless command dashboard. Web DOM, window, and localStorage are not used by this TUI." />
       </box>
     </box>
   );
@@ -256,17 +257,41 @@ function CombatPanel({ snapshot }: SnapshotProps) {
   );
 }
 
-function HelpBar() {
+function formatCommandHint(command: Command): string {
+  return command.key ? `[${command.key}] ${command.label}` : command.label;
+}
+
+function CommandHints({ commands }: { commands?: readonly Command[] }) {
+  const visibleCommands = commands || [];
+  if (!visibleCommands.length) return <text content="Commands unavailable" fg={THEME.muted} bg={THEME.panelAlt} />;
   return (
-    <box backgroundColor={THEME.panelAlt} paddingX={SPACE.xs} justifyContent="space-between" flexDirection="row">
-      <text content="Ctrl+C quit" fg={THEME.text} bg={THEME.panelAlt} />
-      <text content="Read-only first-stage dashboard" fg={THEME.muted} bg={THEME.panelAlt} />
-      <text content="Actions will be dispatched through runtime ports in later stages" fg={THEME.muted} bg={THEME.panelAlt} />
+    <box flexDirection="row" flexWrap="wrap">
+      {visibleCommands.map((command) => (
+        <text
+          key={command.id}
+          content={` ${formatCommandHint(command)} `}
+          fg={command.enabled ? THEME.text : THEME.muted}
+          bg={command.enabled ? THEME.primary : THEME.panelAlt}
+          marginRight={SPACE.xs}
+        />
+      ))}
     </box>
   );
 }
 
-export function App({ snapshot }: { snapshot?: GameSnapshot }) {
+function HelpBar({ commands, status }: CommandBarProps) {
+  return (
+    <box backgroundColor={THEME.panelAlt} paddingX={SPACE.xs} flexDirection="column">
+      <box justifyContent="space-between" flexDirection="row">
+        <text content="Ctrl+C quit" fg={THEME.text} bg={THEME.panelAlt} />
+        <text content={status || 'Press a command key to dispatch through the engine runtime.'} fg={status ? THEME.warning : THEME.muted} bg={THEME.panelAlt} />
+      </box>
+      <CommandHints commands={commands} />
+    </box>
+  );
+}
+
+export function App({ snapshot, commands, status }: { snapshot?: GameSnapshot; commands?: readonly Command[]; status?: string | null }) {
   const safeSnapshot = snapshot || EMPTY_SNAPSHOT;
   return (
     <box id="trimps-dashboard" flexDirection="column" width="100%" height="100%" backgroundColor={THEME.background} padding={SPACE.xs}>
@@ -280,7 +305,7 @@ export function App({ snapshot }: { snapshot?: GameSnapshot }) {
         <BuyColumn snapshot={safeSnapshot} />
         <CombatPanel snapshot={safeSnapshot} />
       </box>
-      <HelpBar />
+      <HelpBar commands={commands} status={status} />
     </box>
   );
 }
